@@ -15,11 +15,19 @@ type ServiceInfoContainerConfigInfo struct {
 	Name          string
 }
 
+type RunningInfoStatus string
+
+const (
+	RunningInfoStatusFetching RunningInfoStatus = "fetching"
+	RunningInfoStatusFound    RunningInfoStatus = "running"
+	RunningInfoStatusNotFound RunningInfoStatus = "not_found"
+)
+
 type ServiceInfoContainer struct {
-	ConfigInfoFound  bool
-	ConfigInfo       ServiceInfoContainerConfigInfo
-	RunningInfoFound bool
-	RunningInfo      ServiceInfoContainerRunningInfo
+	ConfigInfoFound   bool
+	ConfigInfo        ServiceInfoContainerConfigInfo
+	RunningInfoStatus RunningInfoStatus
+	RunningInfo       ServiceInfoContainerRunningInfo
 }
 
 type ServiceInfo struct {
@@ -27,11 +35,11 @@ type ServiceInfo struct {
 	Containers []ServiceInfoContainer
 }
 
-func GetServiceInfo(svcName string) (ServiceInfo, error) {
+func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) error {
 	slog.Debug("Getting service info", "service", svcName)
 	configPath, err := GetComposePathFromServiceName(svcName)
 	if err != nil {
-		return ServiceInfo{}, err
+		return err
 	}
 
 	info := ServiceInfo{
@@ -48,22 +56,24 @@ func GetServiceInfo(svcName string) (ServiceInfo, error) {
 				ContainerName: containerSvc.ContainerName,
 				Name:          containerSvcName,
 			},
-			RunningInfoFound: false,
-			RunningInfo:      ServiceInfoContainerRunningInfo{},
+			RunningInfoStatus: RunningInfoStatusFetching,
+			RunningInfo:       ServiceInfoContainerRunningInfo{},
 		}
 		info.Containers = append(info.Containers, container)
 	}
 
+	svcInfoChannel <- info
+
 	stats, err := compose.GetStats(configPath)
 	if err != nil {
-		return ServiceInfo{}, err
+		return err
 	}
 
 	for _, statsContainer := range stats.Containers {
 		found := false
 		for i, infoContainer := range info.Containers {
 			if statsContainer.Name == infoContainer.ConfigInfo.ContainerName {
-				info.Containers[i].RunningInfoFound = true
+				info.Containers[i].RunningInfoStatus = RunningInfoStatusFound
 				info.Containers[i].RunningInfo = ServiceInfoContainerRunningInfo{
 					ContainerId:   statsContainer.Id,
 					ContainerName: statsContainer.Name,
@@ -74,9 +84,9 @@ func GetServiceInfo(svcName string) (ServiceInfo, error) {
 		}
 		if !found {
 			container := ServiceInfoContainer{
-				ConfigInfoFound:  false,
-				ConfigInfo:       ServiceInfoContainerConfigInfo{},
-				RunningInfoFound: true,
+				ConfigInfoFound:   false,
+				ConfigInfo:        ServiceInfoContainerConfigInfo{},
+				RunningInfoStatus: RunningInfoStatusNotFound,
 				RunningInfo: ServiceInfoContainerRunningInfo{
 					ContainerId:   statsContainer.Id,
 					ContainerName: statsContainer.Name,
@@ -86,5 +96,6 @@ func GetServiceInfo(svcName string) (ServiceInfo, error) {
 		}
 	}
 
-	return info, nil
+	svcInfoChannel <- info
+	return nil
 }

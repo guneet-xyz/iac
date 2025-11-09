@@ -2,10 +2,13 @@ package services
 
 import (
 	"fmt"
+	"iac/utils/ansi"
 	"iac/utils/exitcodes"
 	"iac/utils/service"
 	"log/slog"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -53,33 +56,107 @@ func RunE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	for _, svc := range filteredServices {
-		PrintServiceInfo(svc)
+	svcInfos := []service.ServiceInfo{}
+	svcInfoChannel := make(chan service.ServiceInfo)
+
+	svcInfoWg := sync.WaitGroup{}
+
+	for _, svcName := range filteredServices {
+		svcInfoWg.Go(func() { service.SendServiceInfoToChannel(svcName, svcInfoChannel) })
 	}
+
+	svcInfoWgFinished := false
+
+	go func() {
+		svcInfoWg.Wait()
+		svcInfoWgFinished = true
+		close(svcInfoChannel)
+	}()
+
+	wg := sync.WaitGroup{}
+	mutex := sync.Mutex{}
+
+	wg.Go(func() {
+		for svcInfo := range svcInfoChannel {
+			mutex.Lock()
+			found := false
+			for i, existingSvcInfo := range svcInfos {
+				if existingSvcInfo.Name == svcInfo.Name {
+					svcInfos[i] = svcInfo
+					found = true
+					break
+				}
+			}
+			if !found {
+				svcInfos = append(svcInfos, svcInfo)
+			}
+			PrintServiceInfo(svcInfos)
+			mutex.Unlock()
+		}
+	})
+
+	wg.Go(func() {
+		for {
+			mutex.Lock()
+			if svcInfoWgFinished {
+				return
+			}
+			_spinnerIteration++
+			PrintServiceInfo(svcInfos)
+			mutex.Unlock()
+			time.Sleep(100 * time.Millisecond)
+		}
+	})
+
+	wg.Wait()
 
 	return nil
 }
 
-func PrintServiceInfo(svcName string) error {
-	info, err := service.GetServiceInfo(svcName)
-	if err != nil {
-		return err
+var _linesPreviouslyPrinted int
+var _spinnerIteration int
+
+var spinnerCharset = []string{
+	"⠋",
+	"⠙",
+	"⠹",
+	"⠸",
+	"⠼",
+	"⠴",
+	"⠦",
+	"⠧",
+	"⠇",
+	"⠏",
+}
+
+func spinnerChar(iteration int) string {
+	return spinnerCharset[iteration%len(spinnerCharset)]
+}
+
+func PrintServiceInfo(svcInfos []service.ServiceInfo) {
+	lines := []string{}
+	for _, info := range svcInfos {
+		lines = append(lines, fmt.Sprintf("+ %s", info.Name))
+		for _, container := range info.Containers {
+			switch container.RunningInfoStatus {
+			case service.RunningInfoStatusFetching:
+				lines = append(lines, fmt.Sprintf(" [%s] %s", spinnerChar(_spinnerIteration), container.ConfigInfo.Name))
+			case service.RunningInfoStatusNotFound:
+				lines = append(lines, fmt.Sprintf(" [✗] %s", container.ConfigInfo.Name))
+			case service.RunningInfoStatusFound:
+				lines = append(lines, fmt.Sprintf(" [✓] %s", container.ConfigInfo.Name))
+			}
+		}
 	}
 
-	fmt.Printf("Service: %s\n", info.Name)
-	for _, container := range info.Containers {
-		fmt.Printf("  Container Name: %s\n", container.ConfigInfo.ContainerName)
-		if container.ConfigInfoFound {
-			fmt.Printf("    Config Info Found: Yes\n")
-		} else {
-			fmt.Printf("    Config Info Found: No\n")
-		}
-		if container.RunningInfoFound {
-			fmt.Printf("    Running Info Found: Yes\n")
-			fmt.Printf("    Container ID: %s\n", container.RunningInfo.ContainerId)
-		} else {
-			fmt.Printf("    Running Info Found: No\n")
-		}
+	for i := 0; i < _linesPreviouslyPrinted; i++ {
+		fmt.Print(ansi.LineUp + ansi.LineClear)
 	}
-	return nil
+
+	_linesPreviouslyPrinted = len(lines)
+	_spinnerIteration++
+
+	for _, line := range lines {
+		fmt.Println(line)
+	}
 }
