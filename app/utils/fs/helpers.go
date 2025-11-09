@@ -117,6 +117,6 @@ func ReadFileAsBytes(path string) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("Could not read file", "path", path, "error", err)
 	}
-	slog.Debug("ReadFileAsBytes (Exit)", "path", path, "data", data)
+	slog.Debug("ReadFileAsBytes (Exit)", "path", path, "date length", len(data))
 	return data, nil
 }

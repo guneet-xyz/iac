@@ -2,6 +2,7 @@ package cli
 
 import (
 	"iac/cli/config"
+	"iac/cli/info"
 	"iac/cli/setup"
 	"iac/cli/status"
 	"iac/cli/version"
@@ -36,6 +37,7 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(config.Cmd)
+	Cmd.AddCommand(info.Cmd)
 	Cmd.AddCommand(setup.Cmd)
 	Cmd.AddCommand(status.Cmd)
 	Cmd.AddCommand(version.Cmd)
