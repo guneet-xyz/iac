@@ -18,6 +18,12 @@ type ServiceInfoContainerConfigInfo struct {
 	Name          string
 }
 
+type ServiceInfoContainerInspectInfo struct {
+	RestartCount int
+	Running      bool
+	StartedAt    time.Time
+}
+
 type FetchingStatus string
 
 const (
@@ -25,12 +31,6 @@ const (
 	FetchingStatusFound    FetchingStatus = "fetched"
 	FetchingStatusNotFound FetchingStatus = "not_found"
 )
-
-type ServiceInfoContainerInspectInfo struct {
-	RestartCount int
-	Running      bool
-	StartedAt    time.Time
-}
 
 type ServiceInfoContainer struct {
 	ConfigInfoFound   bool
@@ -44,21 +44,6 @@ type ServiceInfoContainer struct {
 type ServiceInfo struct {
 	Name       string
 	Containers []ServiceInfoContainer
-}
-
-type InspectInfoChannelStruct struct {
-	ContainerIdentifier string
-	Info                ServiceInfoContainerInspectInfo
-}
-
-type RunningInfoChannelStruct struct {
-	ContainerIdentifier string
-	Info                ServiceInfoContainerRunningInfo
-}
-
-type ConfigInfoChannelStruct struct {
-	ContainerIdentifier string
-	Info                ServiceInfoContainerConfigInfo
 }
 
 type InspectResultChannelStruct struct {
