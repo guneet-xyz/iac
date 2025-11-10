@@ -1,8 +1,11 @@
 package service
 
 import (
+	"iac/utils/docker"
 	"iac/utils/docker/compose"
 	"log/slog"
+	"sync"
+	"time"
 )
 
 type ServiceInfoContainerRunningInfo struct {
@@ -15,24 +18,52 @@ type ServiceInfoContainerConfigInfo struct {
 	Name          string
 }
 
-type RunningInfoStatus string
+type FetchingStatus string
 
 const (
-	RunningInfoStatusFetching RunningInfoStatus = "fetching"
-	RunningInfoStatusFound    RunningInfoStatus = "running"
-	RunningInfoStatusNotFound RunningInfoStatus = "not_found"
+	FetchingStatusFetching FetchingStatus = "fetching"
+	FetchingStatusFound    FetchingStatus = "fetched"
+	FetchingStatusNotFound FetchingStatus = "not_found"
 )
+
+type ServiceInfoContainerInspectInfo struct {
+	RestartCount int
+	Running      bool
+	StartedAt    time.Time
+}
 
 type ServiceInfoContainer struct {
 	ConfigInfoFound   bool
 	ConfigInfo        ServiceInfoContainerConfigInfo
-	RunningInfoStatus RunningInfoStatus
+	RunningInfoStatus FetchingStatus
 	RunningInfo       ServiceInfoContainerRunningInfo
+	InspectInfoStatus FetchingStatus
+	InspectInfo       ServiceInfoContainerInspectInfo
 }
 
 type ServiceInfo struct {
 	Name       string
 	Containers []ServiceInfoContainer
+}
+
+type InspectInfoChannelStruct struct {
+	ContainerIdentifier string
+	Info                ServiceInfoContainerInspectInfo
+}
+
+type RunningInfoChannelStruct struct {
+	ContainerIdentifier string
+	Info                ServiceInfoContainerRunningInfo
+}
+
+type ConfigInfoChannelStruct struct {
+	ContainerIdentifier string
+	Info                ServiceInfoContainerConfigInfo
+}
+
+type InspectResultChannelStruct struct {
+	ContainerIndex int
+	InspectResult  docker.InspectResult
 }
 
 func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) error {
@@ -56,8 +87,10 @@ func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) e
 				ContainerName: containerSvc.ContainerName,
 				Name:          containerSvcName,
 			},
-			RunningInfoStatus: RunningInfoStatusFetching,
+			RunningInfoStatus: FetchingStatusFetching,
 			RunningInfo:       ServiceInfoContainerRunningInfo{},
+			InspectInfoStatus: FetchingStatusFetching,
+			InspectInfo:       ServiceInfoContainerInspectInfo{},
 		}
 		info.Containers = append(info.Containers, container)
 	}
@@ -73,7 +106,7 @@ func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) e
 		found := false
 		for i, infoContainer := range info.Containers {
 			if statsContainer.Name == infoContainer.ConfigInfo.ContainerName {
-				info.Containers[i].RunningInfoStatus = RunningInfoStatusFound
+				info.Containers[i].RunningInfoStatus = FetchingStatusFound
 				info.Containers[i].RunningInfo = ServiceInfoContainerRunningInfo{
 					ContainerId:   statsContainer.Id,
 					ContainerName: statsContainer.Name,
@@ -86,16 +119,58 @@ func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) e
 			container := ServiceInfoContainer{
 				ConfigInfoFound:   false,
 				ConfigInfo:        ServiceInfoContainerConfigInfo{},
-				RunningInfoStatus: RunningInfoStatusNotFound,
+				RunningInfoStatus: FetchingStatusNotFound,
 				RunningInfo: ServiceInfoContainerRunningInfo{
 					ContainerId:   statsContainer.Id,
 					ContainerName: statsContainer.Name,
 				},
+				InspectInfoStatus: FetchingStatusFetching,
+				InspectInfo:       ServiceInfoContainerInspectInfo{},
 			}
 			info.Containers = append(info.Containers, container)
 		}
 	}
-
 	svcInfoChannel <- info
+
+	var wg sync.WaitGroup
+	inspectResultChannel := make(chan InspectResultChannelStruct)
+
+	for i, infoContainer := range info.Containers {
+		if infoContainer.RunningInfoStatus == FetchingStatusFound {
+			wg.Go(func() {
+				inspectResults, err := docker.Inspect(infoContainer.RunningInfo.ContainerId)
+				if err != nil {
+					slog.Error("Failed to inspect container", "container", infoContainer.RunningInfo.ContainerId, "error", err)
+					return
+				}
+				if len(inspectResults) > 0 {
+					payload := InspectResultChannelStruct{
+						ContainerIndex: i,
+						InspectResult:  inspectResults[0],
+					}
+					inspectResultChannel <- payload
+				}
+			})
+		} else {
+			info.Containers[i].InspectInfoStatus = FetchingStatusNotFound
+		}
+	}
+
+	go func() {
+		wg.Wait()
+		close(inspectResultChannel)
+	}()
+
+	for payload := range inspectResultChannel {
+		inspectInfo := ServiceInfoContainerInspectInfo{
+			RestartCount: payload.InspectResult.RestartCount,
+			Running:      payload.InspectResult.State.Running,
+			StartedAt:    payload.InspectResult.State.StartedAt,
+		}
+		info.Containers[payload.ContainerIndex].InspectInfoStatus = FetchingStatusFound
+		info.Containers[payload.ContainerIndex].InspectInfo = inspectInfo
+		svcInfoChannel <- info
+	}
+
 	return nil
 }
