@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -102,7 +103,7 @@ func RunE(cmd *cobra.Command, args []string) error {
 			if svcInfoWgFinished {
 				return
 			}
-			_spinnerIteration++
+			spinnerIteration++
 			PrintServiceInfo(svcInfos)
 			mutex.Unlock()
 			time.Sleep(100 * time.Millisecond)
@@ -114,8 +115,8 @@ func RunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-var _linesPreviouslyPrinted int
-var _spinnerIteration int
+var linesPreviouslyPrinted int
+var spinnerIteration int
 
 var spinnerCharset = []string{
 	"⠋",
@@ -131,13 +132,17 @@ var spinnerCharset = []string{
 }
 
 func spinnerChar(iteration int) string {
-	return spinnerCharset[iteration%len(spinnerCharset)]
+	return color.BlueString(spinnerCharset[iteration%len(spinnerCharset)])
 }
+
+var symbolX = color.RedString("✗")
+var symbolQuestion = color.YellowString("?")
+var symbolCheck = color.GreenString("✓")
 
 func PrintServiceInfo(svcInfos []service.ServiceInfo) {
 	lines := []string{}
 	for _, info := range svcInfos {
-		lines = append(lines, fmt.Sprintf("+ %s", info.Name))
+		lines = append(lines, fmt.Sprintf("%s", info.Name))
 		for _, container := range info.Containers {
 			var name string
 			if container.ConfigInfoFound {
@@ -152,28 +157,28 @@ func PrintServiceInfo(svcInfos []service.ServiceInfo) {
 			var symbol string
 			switch container.RunningInfoStatus {
 			case service.FetchingStatusFetching:
-				symbol = spinnerChar(_spinnerIteration)
+				symbol = spinnerChar(spinnerIteration)
 			case service.FetchingStatusNotFound:
-				symbol = "✗"
+				symbol = symbolX
 			case service.FetchingStatusFound:
 				switch container.ConfigInfoFound {
 				case false:
-					symbol = "?"
+					symbol = symbolQuestion
 				case true:
-					symbol = "✓"
+					symbol = symbolCheck
 				}
 			}
 
 			var extraInfo string
 			switch container.InspectInfoStatus {
 			case service.FetchingStatusFetching:
-				extraInfo = spinnerChar(_spinnerIteration)
+				extraInfo = spinnerChar(spinnerIteration)
 			case service.FetchingStatusNotFound:
-				symbol = "✗"
+				symbol = symbolX
 				extraInfo = ""
 			case service.FetchingStatusFound:
 				if !container.InspectInfo.Running {
-					symbol = "✗"
+					symbol = symbolX
 					break
 				}
 				restarts := container.InspectInfo.RestartCount
@@ -192,22 +197,24 @@ func PrintServiceInfo(svcInfos []service.ServiceInfo) {
 				if restarts > 0 {
 					extraInfo += fmt.Sprintf(", %d restarts", restarts)
 				}
+				extraInfo = color.HiBlackString(extraInfo)
 			}
 
 			if extraInfo == "" {
 				lines = append(lines, fmt.Sprintf("  [%s] %s", symbol, name))
 			} else {
-				lines = append(lines, fmt.Sprintf("  [%s] %s (%s)", symbol, name, extraInfo))
+				extraInfo = color.HiBlackString("(") + extraInfo + color.HiBlackString(")")
+				lines = append(lines, fmt.Sprintf("  [%s] %s %s", symbol, name, extraInfo))
 			}
 		}
 	}
 
-	for i := 0; i < _linesPreviouslyPrinted; i++ {
+	for i := 0; i < linesPreviouslyPrinted; i++ {
 		fmt.Print(ansi.LineUp + ansi.LineClear)
 	}
 
-	_linesPreviouslyPrinted = len(lines)
-	_spinnerIteration++
+	linesPreviouslyPrinted = len(lines)
+	spinnerIteration++
 
 	for _, line := range lines {
 		fmt.Println(line)
