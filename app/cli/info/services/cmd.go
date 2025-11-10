@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"iac/utils/ansi"
+	"iac/utils/errors"
 	"iac/utils/exitcodes"
 	"iac/utils/service"
 	"log/slog"
@@ -138,13 +139,65 @@ func PrintServiceInfo(svcInfos []service.ServiceInfo) {
 	for _, info := range svcInfos {
 		lines = append(lines, fmt.Sprintf("+ %s", info.Name))
 		for _, container := range info.Containers {
+			var name string
+			if container.ConfigInfoFound {
+				name = container.ConfigInfo.Name
+			} else if container.RunningInfoStatus == service.FetchingStatusFound {
+				name = container.RunningInfo.ContainerName
+			} else {
+				err := errors.New("This should never happen. Container config info not found, but running info also not found")
+				panic(err)
+			}
+
+			var symbol string
 			switch container.RunningInfoStatus {
-			case service.RunningInfoStatusFetching:
-				lines = append(lines, fmt.Sprintf(" [%s] %s", spinnerChar(_spinnerIteration), container.ConfigInfo.Name))
-			case service.RunningInfoStatusNotFound:
-				lines = append(lines, fmt.Sprintf(" [✗] %s", container.ConfigInfo.Name))
-			case service.RunningInfoStatusFound:
-				lines = append(lines, fmt.Sprintf(" [✓] %s", container.ConfigInfo.Name))
+			case service.FetchingStatusFetching:
+				symbol = spinnerChar(_spinnerIteration)
+			case service.FetchingStatusNotFound:
+				symbol = "✗"
+			case service.FetchingStatusFound:
+				switch container.ConfigInfoFound {
+				case false:
+					symbol = "?"
+				case true:
+					symbol = "✓"
+				}
+			}
+
+			var extraInfo string
+			switch container.InspectInfoStatus {
+			case service.FetchingStatusFetching:
+				extraInfo = spinnerChar(_spinnerIteration)
+			case service.FetchingStatusNotFound:
+				symbol = "✗"
+				extraInfo = ""
+			case service.FetchingStatusFound:
+				if !container.InspectInfo.Running {
+					symbol = "✗"
+					break
+				}
+				restarts := container.InspectInfo.RestartCount
+				runningSince := time.Since(container.InspectInfo.StartedAt)
+				var runningSinceString string
+				if runningSince > 24*time.Hour {
+					runningSinceString = fmt.Sprintf("%d days, %d hours", int(runningSince.Hours())/24, int(runningSince.Hours())%24)
+				} else if runningSince > time.Hour {
+					runningSinceString = fmt.Sprintf("%d hours, %d minutes", int(runningSince.Hours()), int(runningSince.Minutes())%60)
+				} else if runningSince > time.Minute {
+					runningSinceString = fmt.Sprintf("%d minutes, %d seconds", int(runningSince.Minutes()), int(runningSince.Seconds())%60)
+				} else {
+					runningSinceString = fmt.Sprintf("%d seconds", int(runningSince.Seconds()))
+				}
+				extraInfo += fmt.Sprintf("up %s", runningSinceString)
+				if restarts > 0 {
+					extraInfo += fmt.Sprintf(", %d restarts", restarts)
+				}
+			}
+
+			if extraInfo == "" {
+				lines = append(lines, fmt.Sprintf("  [%s] %s", symbol, name))
+			} else {
+				lines = append(lines, fmt.Sprintf("  [%s] %s (%s)", symbol, name, extraInfo))
 			}
 		}
 	}
