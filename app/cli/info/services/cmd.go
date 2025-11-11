@@ -30,57 +30,56 @@ func init() {
 }
 
 func RunE(cmd *cobra.Command, args []string) error {
-	services, err := service.GetServiceNames()
-	if err != nil {
-		return err
-	}
-
-	var filteredServices []string
-
-	if name != "" {
-		for _, svc := range services {
-			if svc == name {
-				filteredServices = append(filteredServices, svc)
-				break
-			}
-		}
-		if len(filteredServices) == 0 {
-			slog.Info("Service not found", "name", name)
-			os.Exit(exitcodes.ServiceNotFound)
-			return nil
-		}
-	} else {
-		filteredServices = services
-		if len(filteredServices) == 0 {
-			slog.Info("No services found")
-			os.Exit(exitcodes.NoServicesFound)
-			return nil
-		}
-	}
-
+	wg := sync.WaitGroup{}
+	mutex := sync.Mutex{}
+	svcInfoWgFinished := false
 	svcInfos := []service.ServiceInfo{}
 	svcInfoChannel := make(chan service.ServiceInfo)
 
-	svcInfoWg := sync.WaitGroup{}
+	wg.Go(func() {
 
-	for _, svcName := range filteredServices {
-		svcInfoWg.Go(func() { service.SendServiceInfoToChannel(svcName, svcInfoChannel) })
-	}
+		services, err := service.GetServiceNames()
+		if err != nil {
+			return
+		}
 
-	svcInfoWgFinished := false
+		var filteredServices []string
 
-	go func() {
+		if name != "" {
+			for _, svc := range services {
+				if svc == name {
+					filteredServices = append(filteredServices, svc)
+					break
+				}
+			}
+			if len(filteredServices) == 0 {
+				slog.Info("Service not found", "name", name)
+				os.Exit(exitcodes.ServiceNotFound)
+				return
+			}
+		} else {
+			filteredServices = services
+			if len(filteredServices) == 0 {
+				slog.Info("No services found")
+				os.Exit(exitcodes.NoServicesFound)
+				return
+			}
+		}
+
+		svcInfoWg := sync.WaitGroup{}
+
+		for _, svcName := range filteredServices {
+			svcInfoWg.Go(func() { service.SendServiceInfoToChannel(svcName, svcInfoChannel) })
+		}
+
 		svcInfoWg.Wait()
 		svcInfoWgFinished = true
 		close(svcInfoChannel)
-	}()
 
-	wg := sync.WaitGroup{}
-	mutex := sync.Mutex{}
+	})
 
 	wg.Go(func() {
 		for svcInfo := range svcInfoChannel {
-			mutex.Lock()
 			found := false
 			for i, existingSvcInfo := range svcInfos {
 				if existingSvcInfo.Name == svcInfo.Name {
@@ -92,6 +91,7 @@ func RunE(cmd *cobra.Command, args []string) error {
 			if !found {
 				svcInfos = append(svcInfos, svcInfo)
 			}
+			mutex.Lock()
 			PrintServiceInfo(svcInfos)
 			mutex.Unlock()
 		}
@@ -99,10 +99,10 @@ func RunE(cmd *cobra.Command, args []string) error {
 
 	wg.Go(func() {
 		for {
-			mutex.Lock()
 			if svcInfoWgFinished {
 				return
 			}
+			mutex.Lock()
 			spinnerIteration++
 			PrintServiceInfo(svcInfos)
 			mutex.Unlock()
@@ -141,6 +141,10 @@ var symbolCheck = color.GreenString("✓")
 
 func PrintServiceInfo(svcInfos []service.ServiceInfo) {
 	lines := []string{}
+	if len(svcInfos) == 0 {
+		lines = append(lines, spinnerChar(spinnerIteration))
+	}
+
 	for _, info := range svcInfos {
 		lines = append(lines, fmt.Sprintf("%s", info.Name))
 		for _, container := range info.Containers {
