@@ -2,9 +2,10 @@ package services
 
 import (
 	"fmt"
-	"iac/utils/ansi"
 	"iac/utils/errors"
 	"iac/utils/exitcodes"
+	"iac/utils/out"
+	"iac/utils/out/symbols"
 	"iac/utils/service"
 	"log/slog"
 	"os"
@@ -92,7 +93,7 @@ func ShowInfoAboutService(name string) error {
 				svcInfos = append(svcInfos, svcInfo)
 			}
 			mutex.Lock()
-			PrintServiceInfo(svcInfos)
+			printServiceInfo(svcInfos)
 			mutex.Unlock()
 		}
 	})
@@ -103,8 +104,7 @@ func ShowInfoAboutService(name string) error {
 				return
 			}
 			mutex.Lock()
-			spinnerIteration++
-			PrintServiceInfo(svcInfos)
+			printServiceInfo(svcInfos)
 			mutex.Unlock()
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -115,34 +115,10 @@ func ShowInfoAboutService(name string) error {
 	return nil
 }
 
-var linesPreviouslyPrinted int
-var spinnerIteration int
-
-var spinnerCharset = []string{
-	"⠋",
-	"⠙",
-	"⠹",
-	"⠸",
-	"⠼",
-	"⠴",
-	"⠦",
-	"⠧",
-	"⠇",
-	"⠏",
-}
-
-func spinnerChar(iteration int) string {
-	return color.BlueString(spinnerCharset[iteration%len(spinnerCharset)])
-}
-
-var symbolX = color.RedString("✗")
-var symbolQuestion = color.YellowString("?")
-var symbolCheck = color.GreenString("✓")
-
-func PrintServiceInfo(svcInfos []service.ServiceInfo) {
+func printServiceInfo(svcInfos []service.ServiceInfo) {
 	lines := []string{}
 	if len(svcInfos) == 0 {
-		lines = append(lines, spinnerChar(spinnerIteration))
+		lines = append(lines, out.SpinnerChar())
 	}
 
 	for _, info := range svcInfos {
@@ -161,41 +137,54 @@ func PrintServiceInfo(svcInfos []service.ServiceInfo) {
 			var symbol string
 			switch container.RunningInfoStatus {
 			case service.FetchingStatusFetching:
-				symbol = spinnerChar(spinnerIteration)
+				symbol = out.SpinnerChar()
 			case service.FetchingStatusNotFound:
-				symbol = symbolX
+				symbol = symbols.X
 			case service.FetchingStatusFound:
 				switch container.ConfigInfoFound {
 				case false:
-					symbol = symbolQuestion
+					symbol = symbols.Question
 				case true:
-					symbol = symbolCheck
+					symbol = symbols.Check
 				}
 			}
 
 			var extraInfo string
 			switch container.InspectInfoStatus {
 			case service.FetchingStatusFetching:
-				extraInfo = spinnerChar(spinnerIteration)
+				extraInfo = out.SpinnerChar()
 			case service.FetchingStatusNotFound:
-				symbol = symbolX
+				symbol = symbols.X
 				extraInfo = ""
 			case service.FetchingStatusFound:
 				if !container.InspectInfo.Running {
-					symbol = symbolX
+					symbol = symbols.X
 					break
 				}
 				restarts := container.InspectInfo.RestartCount
 				runningSince := time.Since(container.InspectInfo.StartedAt)
 				var runningSinceString string
-				if runningSince > 24*time.Hour {
-					runningSinceString = fmt.Sprintf("%d days, %d hours", int(runningSince.Hours())/24, int(runningSince.Hours())%24)
+				if runningSince > 24*7*time.Hour {
+					runningSinceString = fmt.Sprintf("%d days", int(runningSince.Hours())/24)
 				} else if runningSince > time.Hour {
-					runningSinceString = fmt.Sprintf("%d hours, %d minutes", int(runningSince.Hours()), int(runningSince.Minutes())%60)
+					if runningSince.Hours() > 1 {
+						runningSinceString = fmt.Sprintf("%d hours", int(runningSince.Hours()))
+					} else {
+						// can replace this with static string but I'm curious whether this can ever be negative
+						runningSinceString = fmt.Sprintf("%d hour", int(runningSince.Hours()))
+					}
 				} else if runningSince > time.Minute {
-					runningSinceString = fmt.Sprintf("%d minutes, %d seconds", int(runningSince.Minutes()), int(runningSince.Seconds())%60)
+					if runningSince.Minutes() > 1 {
+						runningSinceString = fmt.Sprintf("%d minutes", int(runningSince.Minutes()))
+					} else {
+						runningSinceString = fmt.Sprintf("%d minute", int(runningSince.Minutes()))
+					}
 				} else {
-					runningSinceString = fmt.Sprintf("%d seconds", int(runningSince.Seconds()))
+					if runningSince.Seconds() > 1 {
+						runningSinceString = fmt.Sprintf("%d seconds", int(runningSince.Seconds()))
+					} else {
+						runningSinceString = fmt.Sprintf("%d second", int(runningSince.Seconds()))
+					}
 				}
 				extraInfo += fmt.Sprintf("up %s", runningSinceString)
 				if restarts > 0 {
@@ -213,14 +202,5 @@ func PrintServiceInfo(svcInfos []service.ServiceInfo) {
 		}
 	}
 
-	for i := 0; i < linesPreviouslyPrinted; i++ {
-		fmt.Print(ansi.LineUp + ansi.LineClear)
-	}
-
-	linesPreviouslyPrinted = len(lines)
-	spinnerIteration++
-
-	for _, line := range lines {
-		fmt.Println(line)
-	}
+	out.RepaintLines(lines)
 }
