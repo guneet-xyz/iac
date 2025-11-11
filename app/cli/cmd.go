@@ -5,6 +5,7 @@ import (
 	"iac/cli/info"
 	"iac/cli/setup"
 	"iac/cli/status"
+	"iac/cli/up"
 	"iac/cli/version"
 	"log/slog"
 	"os"
@@ -40,6 +41,7 @@ func init() {
 	Cmd.AddCommand(info.Cmd)
 	Cmd.AddCommand(setup.Cmd)
 	Cmd.AddCommand(status.Cmd)
+	Cmd.AddCommand(up.Cmd)
 	Cmd.AddCommand(version.Cmd)
 	Cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
 }
