@@ -22,14 +22,14 @@ var (
 var Cmd = &cobra.Command{
 	Use:   "services",
 	Short: "info about services",
-	RunE:  RunE,
+	RunE:  func(_ *cobra.Command, _ []string) error { return ShowInfoAboutService(name) },
 }
 
 func init() {
 	Cmd.Flags().StringVar(&name, "name", "", "Specify a service to get info about")
 }
 
-func RunE(cmd *cobra.Command, args []string) error {
+func ShowInfoAboutService(name string) error {
 	wg := sync.WaitGroup{}
 	mutex := sync.Mutex{}
 	svcInfoWgFinished := false
