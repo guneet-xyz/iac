@@ -1,4 +1,3 @@
-// This package exists to that this logger setup happens before any other package code runs
 package logger
 
 import (
@@ -8,7 +7,7 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-func init() {
+func SetupLogger() {
 	handlerOptions := tint.Options{
 		Level: slog.LevelInfo,
 	}

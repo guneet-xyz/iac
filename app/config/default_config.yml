@@ -1,2 +1,3 @@
 servicesDirPath: "~/.local/share/iac/services"
 backupsDirPath: "~/.local/share/iac/backups"
+secretsDirPath: "~/.local/share/iac/secrets"

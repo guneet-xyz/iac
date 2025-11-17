@@ -28,7 +28,7 @@ func setupConfigIfItDoesNotExist() error {
 	switch stat {
 	case fs.StatResultNotExist:
 		slog.Info("Config file does not exist, creating default config file", "path", ConfigFilePath)
-		err = fs.WriteFile(ConfigFilePath, DefaultConfig)
+		err = fs.WriteFileFromString(ConfigFilePath, DefaultConfig)
 	}
 
 	return nil

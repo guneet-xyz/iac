@@ -88,7 +88,7 @@ func Stat(path string) (StatResult, error) {
 	}
 }
 
-func WriteFile(path string, content string) error {
+func WriteFileFromString(path string, content string) error {
 	slog.Debug("WriteFile (Enter)", "path", path, "content", content)
 
 	err := os.WriteFile(path, []byte(content), 0644)
@@ -96,6 +96,17 @@ func WriteFile(path string, content string) error {
 		return errors.New("Could not write file", "path", path, "error", err)
 	}
 
+	slog.Debug("WriteFile (Exit)", "path", path)
+	return nil
+}
+
+func WriteFileFromBytes(path string, content []byte) error {
+	slog.Debug("WriteFile (Enter)", "path", path, "content length", len(content))
+
+	err := os.WriteFile(path, content, 0644)
+	if err != nil {
+		return errors.New("Could not write file", "path", path, "error", err)
+	}
 	slog.Debug("WriteFile (Exit)", "path", path)
 	return nil
 }
