@@ -6,12 +6,12 @@ import (
 )
 
 func checkIfMasterKeyExists() (int, error) {
-	masterKey, err := GetMasterKey()
+	exists, err := DoesMasterKeyExist()
 	if err != nil {
-		return exitcodes.MasterKeyDoesNotExist, err
+		return exitcodes.MasterKeyStatError, err
 	}
-	if masterKey == "" {
-		return exitcodes.MasterKeyDoesNotExist, errors.New("master key does not exist in keyring")
+	if !exists {
+		return exitcodes.MasterKeyNotFound, errors.New("Master key not found. Please run 'iac setup' to create one.")
 	}
 	return 0, nil
 }

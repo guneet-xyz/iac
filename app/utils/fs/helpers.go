@@ -131,3 +131,23 @@ func ReadFileAsBytes(path string) ([]byte, error) {
 	slog.Debug("ReadFileAsBytes (Exit)", "path", path, "date length", len(data))
 	return data, nil
 }
+
+func ReadDir(path string) ([]DirEntry, error) {
+	slog.Debug("ReadDir (Enter)", "path", path)
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, errors.New("Could not read directory", "path", path, "error", err)
+	}
+	slog.Debug("ReadDir (Exit)", "path", path, "entries count", len(entries))
+	return entries, nil
+}
+
+func DeleteFile(path string) error {
+	slog.Debug("DeleteFile (Enter)", "path", path)
+	err := os.Remove(path)
+	if err != nil {
+		return errors.New("Could not delete file", "path", path, "error", err)
+	}
+	slog.Debug("DeleteFile (Exit)", "path", path)
+	return nil
+}

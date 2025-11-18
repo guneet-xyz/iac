@@ -3,6 +3,7 @@ package setup
 import (
 	"fmt"
 	"iac/utils/secret"
+	"log/slog"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -14,24 +15,25 @@ var Cmd = &cobra.Command{
 	Short: "first time setup",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println(`Edit config file at ~/.iac/config.yaml to set up your environment`)
-		masterKey, err := secret.GetMasterKey()
-		if err == nil && masterKey != "" {
-			fmt.Println("Master key is already set up.")
+
+		exists, err := secret.DoesMasterKeyExist()
+		if err != nil {
+			slog.Error("Error checking if master key exists", "error", err)
+			return err
+		}
+		if exists {
+			fmt.Println("Master key already exists. Setup is already complete.")
 			return nil
 		}
 
 		fmt.Println("Enter master phrase to generate master key :")
-		var phrase string
-		_, err = fmt.Scanln(&phrase)
-		if err != nil {
-			return err
-		}
 		bytes, err := term.ReadPassword(int(syscall.Stdin))
 		fmt.Println()
 		if err != nil {
 			return err
 		}
 		plaintextKey := string(bytes)
+		slog.Debug("Setting master key")
 		err = secret.SetMasterKey(plaintextKey)
 		if err != nil {
 			return err
