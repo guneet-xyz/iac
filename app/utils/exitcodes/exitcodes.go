@@ -8,4 +8,6 @@ const (
 	ConfigFileNotFound            = 4
 	ServiceNotFound               = 5
 	NoServicesFound               = 6
+	MasterKeyStatError            = 7
+	MasterKeyNotFound             = 8
 )

@@ -88,7 +88,7 @@ func Stat(path string) (StatResult, error) {
 	}
 }
 
-func WriteFile(path string, content string) error {
+func WriteFileFromString(path string, content string) error {
 	slog.Debug("WriteFile (Enter)", "path", path, "content", content)
 
 	err := os.WriteFile(path, []byte(content), 0644)
@@ -96,6 +96,17 @@ func WriteFile(path string, content string) error {
 		return errors.New("Could not write file", "path", path, "error", err)
 	}
 
+	slog.Debug("WriteFile (Exit)", "path", path)
+	return nil
+}
+
+func WriteFileFromBytes(path string, content []byte) error {
+	slog.Debug("WriteFile (Enter)", "path", path, "content length", len(content))
+
+	err := os.WriteFile(path, content, 0644)
+	if err != nil {
+		return errors.New("Could not write file", "path", path, "error", err)
+	}
 	slog.Debug("WriteFile (Exit)", "path", path)
 	return nil
 }
@@ -119,4 +130,24 @@ func ReadFileAsBytes(path string) ([]byte, error) {
 	}
 	slog.Debug("ReadFileAsBytes (Exit)", "path", path, "date length", len(data))
 	return data, nil
+}
+
+func ReadDir(path string) ([]DirEntry, error) {
+	slog.Debug("ReadDir (Enter)", "path", path)
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, errors.New("Could not read directory", "path", path, "error", err)
+	}
+	slog.Debug("ReadDir (Exit)", "path", path, "entries count", len(entries))
+	return entries, nil
+}
+
+func DeleteFile(path string) error {
+	slog.Debug("DeleteFile (Enter)", "path", path)
+	err := os.Remove(path)
+	if err != nil {
+		return errors.New("Could not delete file", "path", path, "error", err)
+	}
+	slog.Debug("DeleteFile (Exit)", "path", path)
+	return nil
 }

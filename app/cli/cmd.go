@@ -3,14 +3,16 @@ package cli
 import (
 	"iac/cli/config"
 	"iac/cli/info"
+	"iac/cli/secret"
 	"iac/cli/setup"
 	"iac/cli/status"
 	"iac/cli/up"
 	"iac/cli/version"
+	"iac/utils"
+	"iac/utils/logger"
 	"log/slog"
-	"os"
+	"slices"
 
-	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
 )
 
@@ -18,27 +20,33 @@ var (
 	verbose bool
 )
 
+var exceptions = []string{
+	"setup",
+	"version",
+}
+
 var Cmd = &cobra.Command{
 	Use:   "iac",
 	Short: "A custom, and perhaps over-engineered, IaC solution",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
 		slog.Debug("Setting up logger", "verbose", verbose)
-		handlerOptions := tint.Options{
-			Level: slog.LevelInfo,
-		}
-		if verbose {
-			handlerOptions.Level = slog.LevelDebug
-		}
-		handler := tint.NewHandler(os.Stdout, &handlerOptions)
-		logger := slog.New(handler)
-		slog.SetDefault(logger)
+		logger.SetupLogger()
+		cmdName := cmd.Name()
 		slog.Debug("Logger setup complete", "verbose", verbose)
+		if !slices.Contains(exceptions, cmdName) {
+			err := utils.SanityChecks()
+			if err != nil {
+				slog.Error("Sanity checks failed", "error", err)
+				panic(err)
+			}
+		}
 	},
 }
 
 func init() {
 	Cmd.AddCommand(config.Cmd)
 	Cmd.AddCommand(info.Cmd)
+	Cmd.AddCommand(secret.Cmd)
 	Cmd.AddCommand(setup.Cmd)
 	Cmd.AddCommand(status.Cmd)
 	Cmd.AddCommand(up.Cmd)

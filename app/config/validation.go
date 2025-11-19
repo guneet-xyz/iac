@@ -18,8 +18,13 @@ func validateConfig(c *Config) error {
 		return err
 	}
 
-	if c.ServicesDirPath == c.BackupsDirPath {
-		return errors.New("ServicesDirPath and BackupsDirPath cannot be the same")
+	c.SecretsDirPath, err = fs.MkdirIfNotExists(c.SecretsDirPath)
+	if err != nil {
+		return err
+	}
+
+	if c.ServicesDirPath == c.BackupsDirPath || c.ServicesDirPath == c.SecretsDirPath || c.BackupsDirPath == c.SecretsDirPath {
+		return errors.New("ServicesDirPath, BackupsDirPath and SecretsDirPath must be different paths")
 	}
 
 	return nil
