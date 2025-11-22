@@ -8,7 +8,10 @@ import (
 )
 
 func main() {
-	logger.SetupLogger(true)
+	logger.SetupLogger(logger.LoggerOptions{
+		Verbose: true,
+		Time:    false,
+	})
 	err := cli.Cmd.Execute()
 	if err != nil {
 		os.Exit(exitcodes.UnknownError)

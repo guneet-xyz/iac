@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	verbose bool
+	verbose  bool
+	showTime bool
 )
 
 var exceptions = []string{
@@ -29,7 +30,10 @@ var Cmd = &cobra.Command{
 	Use:   "iac",
 	Short: "A custom, and perhaps over-engineered, IaC solution",
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-		logger.SetupLogger(verbose)
+		logger.SetupLogger(logger.LoggerOptions{
+			Verbose: verbose,
+			Time:    showTime,
+		})
 		slog.Debug("Logger setup complete", "verbose", verbose)
 		cmdName := cmd.Name()
 		if !slices.Contains(exceptions, cmdName) {
@@ -51,4 +55,5 @@ func init() {
 	Cmd.AddCommand(up.Cmd)
 	Cmd.AddCommand(version.Cmd)
 	Cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	Cmd.PersistentFlags().BoolVarP(&showTime, "show-time", "t", false, "Show timestamps in logs")
 }
