@@ -2,6 +2,7 @@ package config
 
 import (
 	_ "embed"
+	"iac/utils/exitcodes"
 	"iac/utils/fs"
 	"log/slog"
 	"path/filepath"
@@ -32,4 +33,17 @@ func setupConfigIfItDoesNotExist() error {
 	}
 
 	return nil
+}
+
+func SanityChecks() (int, error) {
+	slog.Debug("Performing config sanity checks")
+
+	err := setupConfigIfItDoesNotExist()
+	if err != nil {
+		slog.Error("Failed to setup config file", "error", err)
+		return exitcodes.FailedToSetupConfigFile, err
+	}
+
+	slog.Debug("Config sanity checks passed")
+	return 0, nil
 }

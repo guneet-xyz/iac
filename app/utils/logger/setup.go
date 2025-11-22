@@ -7,9 +7,15 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-func SetupLogger() {
+func SetupLogger(verbose bool) {
+	var level slog.Level
+	if verbose {
+		level = slog.LevelDebug
+	} else {
+		level = slog.LevelInfo
+	}
 	handlerOptions := tint.Options{
-		Level: slog.LevelInfo,
+		Level: level,
 	}
 	handler := tint.NewHandler(os.Stdout, &handlerOptions)
 	logger := slog.New(handler)
