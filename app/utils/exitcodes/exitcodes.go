@@ -10,4 +10,5 @@ const (
 	NoServicesFound               = 6
 	MasterKeyStatError            = 7
 	MasterKeyNotFound             = 8
+	FailedToSetupConfigFile       = 9
 )

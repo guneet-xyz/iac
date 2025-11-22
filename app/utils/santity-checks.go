@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"iac/config"
 	"iac/utils/docker"
 	"iac/utils/secret"
 	"os"
@@ -11,6 +12,9 @@ func SanityChecks() error {
 		os.Exit(exitCode)
 	}
 	if exitCode, err := secret.SanityChecks(); err != nil {
+		os.Exit(exitCode)
+	}
+	if exitCode, err := config.SanityChecks(); err != nil {
 		os.Exit(exitCode)
 	}
 	return nil

@@ -29,10 +29,9 @@ var Cmd = &cobra.Command{
 	Use:   "iac",
 	Short: "A custom, and perhaps over-engineered, IaC solution",
 	PersistentPreRun: func(cmd *cobra.Command, _ []string) {
-		slog.Debug("Setting up logger", "verbose", verbose)
-		logger.SetupLogger()
-		cmdName := cmd.Name()
+		logger.SetupLogger(verbose)
 		slog.Debug("Logger setup complete", "verbose", verbose)
+		cmdName := cmd.Name()
 		if !slices.Contains(exceptions, cmdName) {
 			err := utils.SanityChecks()
 			if err != nil {

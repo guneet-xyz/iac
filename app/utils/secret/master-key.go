@@ -36,6 +36,7 @@ func DoesMasterKeyExist() (bool, error) {
 func GetMasterKeyB64() (string, error) {
 	slog.Debug("Retrieving master key")
 	keyB64, err := fs.ReadFileAsString(masterKeyPath())
+	slog.Debug("Master key read from file", "length", len(keyB64))
 	if err != nil {
 		slog.Error("Error while trying to read master key from file", "error", err)
 		return "", err
