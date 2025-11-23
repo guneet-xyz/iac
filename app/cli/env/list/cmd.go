@@ -2,7 +2,7 @@ package list
 
 import (
 	"fmt"
-	"iac/utils/secret"
+	"iac/utils/env"
 	"log/slog"
 
 	"github.com/spf13/cobra"
@@ -12,22 +12,22 @@ var Cmd = &cobra.Command{
 	Use:   "list",
 	Short: "list secrets",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		secrets, err := secret.GetSecrets()
+		entries, err := env.ListEnvEntries()
 		if err != nil {
-			slog.Error("Failed to list secrets", "error", err)
+			slog.Error("Failed to list env entries", "error", err)
 			return err
 		}
-		if len(secrets) == 0 {
-			fmt.Println("No secrets found. Add one using 'iac secret add' command.")
+		if len(entries) == 0 {
+			fmt.Println("No entries found. Add one using 'iac env add' command.")
 			return nil
 		}
-		if len(secrets) == 1 {
-			fmt.Println("Found 1 secret:")
+		if len(entries) == 1 {
+			fmt.Println("Found 1 env entry:")
 		} else {
-			fmt.Printf("Found %d secrets:\n", len(secrets))
+			fmt.Printf("Found %d env entry:\n", len(entries))
 		}
 
-		for _, s := range secrets {
+		for _, s := range entries {
 			fmt.Println("- " + s)
 		}
 		return nil

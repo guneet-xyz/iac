@@ -3,5 +3,7 @@ package config
 type Config struct {
 	ServicesDirPath string
 	BackupsDirPath  string
-	SecretsDirPath  string
+	EnvDirPath      string
+	KcvPath         string
+	MasterKeyPath   string
 }

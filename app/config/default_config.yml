@@ -1,3 +1,5 @@
 servicesDirPath: "~/.local/share/iac/services"
 backupsDirPath: "~/.local/share/iac/backups"
-secretsDirPath: "~/.local/share/iac/secrets"
+envDirPath: "~/.local/share/iac/env"
+kcvPath: "~/.local/share/iac/kcv.json"
+masterKeyPath: "~/.local/share/iac/master_key"

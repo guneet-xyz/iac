@@ -4,7 +4,6 @@ import (
 	"iac/config"
 	"iac/utils/fs"
 	"iac/utils/json"
-	"path/filepath"
 )
 
 type Kcv struct {
@@ -14,9 +13,8 @@ type Kcv struct {
 }
 
 func doesKcvExist() bool {
-	config := config.GetConfig()
-	kcvPath := filepath.Join(config.SecretsDirPath, "kcv.json")
-	stat, err := fs.Stat(kcvPath)
+	conf := config.GetConfig()
+	stat, err := fs.Stat(conf.KcvPath)
 	if err != nil {
 		return false
 	}
@@ -24,9 +22,8 @@ func doesKcvExist() bool {
 }
 
 func getKcv() (Kcv, error) {
-	config := config.GetConfig()
-	kcvPath := filepath.Join(config.SecretsDirPath, "kcv.json")
-	bytes, err := fs.ReadFileAsBytes(kcvPath)
+	conf := config.GetConfig()
+	bytes, err := fs.ReadFileAsBytes(conf.KcvPath)
 	if err != nil {
 		return Kcv{}, err
 	}
@@ -39,19 +36,18 @@ func getKcv() (Kcv, error) {
 }
 
 func saveKcv(kcv Kcv) error {
-	config := config.GetConfig()
-	kcvPath := filepath.Join(config.SecretsDirPath, "kcv.json")
+	conf := config.GetConfig()
 	bytes, err := json.Marshal(kcv)
 	if err != nil {
 		return err
 	}
-	return fs.WriteFileFromBytes(kcvPath, bytes)
+	return fs.WriteFileFromBytes(conf.KcvPath, bytes)
 }
 
 var KcvPlainText = "Be My Baby - The Ronettes"
 
 func generateKcv(saltBase64 string, ivBase64 string, keyBase64 string) (Kcv, error) {
-	encryptedKcvValue, err := encryptAES256GCMB64(KcvPlainText, keyBase64, ivBase64)
+	encryptedKcvValue, err := EncryptAES256GCMB64(KcvPlainText, keyBase64, ivBase64)
 	if err != nil {
 		return Kcv{}, err
 	}
@@ -69,7 +65,7 @@ func verifyKeyWithKcv(keyBase64 string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	decryptedKcvValue, err := decryptAES256GCMB64(kcv.ValueBase64, keyBase64, kcv.IvBase64)
+	decryptedKcvValue, err := DecryptAES256GCMB64(kcv.ValueBase64, keyBase64, kcv.IvBase64)
 	if err != nil {
 		return false, err
 	}
