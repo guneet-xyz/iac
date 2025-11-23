@@ -75,3 +75,15 @@ func verifyKeyWithKcv(keyBase64 string) (bool, error) {
 	}
 	return decryptedKcvValue == KcvPlainText, nil
 }
+
+func VerifyPassphraseWithKcv(passphrase string) (bool, error) {
+	kcv, err := getKcv()
+	if err != nil {
+		return false, err
+	}
+	keyBase64, err := GenerateKeyB64(passphrase, kcv.SaltBase64)
+	if err != nil {
+		return false, err
+	}
+	return verifyKeyWithKcv(keyBase64)
+}

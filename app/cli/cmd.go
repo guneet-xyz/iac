@@ -7,6 +7,7 @@ import (
 	"iac/cli/setup"
 	"iac/cli/status"
 	"iac/cli/up"
+	verifymasterkey "iac/cli/verify-master-key"
 	"iac/cli/version"
 	"iac/utils"
 	"iac/utils/logger"
@@ -53,6 +54,7 @@ func init() {
 	Cmd.AddCommand(setup.Cmd)
 	Cmd.AddCommand(status.Cmd)
 	Cmd.AddCommand(up.Cmd)
+	Cmd.AddCommand(verifymasterkey.Cmd)
 	Cmd.AddCommand(version.Cmd)
 	Cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
 	Cmd.PersistentFlags().BoolVarP(&showTime, "show-time", "t", false, "Show timestamps in logs")
