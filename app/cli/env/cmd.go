@@ -1,18 +1,18 @@
-package secret
+package env
 
 import (
-	"iac/cli/secret/add"
-	"iac/cli/secret/get"
-	"iac/cli/secret/list"
-	"iac/cli/secret/remove"
+	"iac/cli/env/add"
+	"iac/cli/env/get"
+	"iac/cli/env/list"
+	"iac/cli/env/remove"
 
 	"github.com/spf13/cobra"
 )
 
 var Cmd = &cobra.Command{
-	Use:     "secret",
-	Short:   "manage secrets",
-	Aliases: []string{"secrets"},
+	Use:     "environment",
+	Short:   "manage environment",
+	Aliases: []string{"env"},
 }
 
 func init() {

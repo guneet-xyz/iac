@@ -2,8 +2,8 @@ package cli
 
 import (
 	"iac/cli/config"
+	"iac/cli/env"
 	"iac/cli/info"
-	"iac/cli/secret"
 	"iac/cli/setup"
 	"iac/cli/status"
 	"iac/cli/up"
@@ -50,7 +50,7 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(config.Cmd)
 	Cmd.AddCommand(info.Cmd)
-	Cmd.AddCommand(secret.Cmd)
+	Cmd.AddCommand(env.Cmd)
 	Cmd.AddCommand(setup.Cmd)
 	Cmd.AddCommand(status.Cmd)
 	Cmd.AddCommand(up.Cmd)
