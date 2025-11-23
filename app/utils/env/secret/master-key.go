@@ -5,12 +5,12 @@ import (
 	"iac/utils/errors"
 	"iac/utils/fs"
 	"log/slog"
-	"path/filepath"
 )
 
 func DoesMasterKeyExist() (bool, error) {
 	slog.Debug("Checking if master key exists")
-	stat, err := fs.Stat(masterKeyPath())
+	conf := config.GetConfig()
+	stat, err := fs.Stat(conf.MasterKeyPath)
 	if err != nil {
 		slog.Error("Error while trying to stat master key file", "error", err)
 		return false, err
@@ -35,7 +35,8 @@ func DoesMasterKeyExist() (bool, error) {
 
 func GetMasterKeyB64() (string, error) {
 	slog.Debug("Retrieving master key")
-	keyB64, err := fs.ReadFileAsString(masterKeyPath())
+	conf := config.GetConfig()
+	keyB64, err := fs.ReadFileAsString(conf.MasterKeyPath)
 	slog.Debug("Master key read from file", "length", len(keyB64))
 	if err != nil {
 		slog.Error("Error while trying to read master key from file", "error", err)
@@ -56,6 +57,7 @@ func SetMasterKey(plainTextValue string) error {
 	slog.Debug("Setting master key")
 	kcvExists := doesKcvExist()
 	var keyB64 string
+	var err error
 	if kcvExists {
 		kcv, err := getKcv()
 		if err != nil {
@@ -78,7 +80,7 @@ func SetMasterKey(plainTextValue string) error {
 	} else {
 		saltB64 := GenerateSaltB64()
 		ivB64 := GenerateIVB64()
-		keyB64, err := GenerateKeyB64(plainTextValue, saltB64)
+		keyB64, err = GenerateKeyB64(plainTextValue, saltB64)
 		if err != nil {
 			return err
 		}
@@ -94,7 +96,8 @@ func SetMasterKey(plainTextValue string) error {
 		slog.Info("KCV created.")
 	}
 
-	err := fs.WriteFileFromString(masterKeyPath(), keyB64)
+	conf := config.GetConfig()
+	err = fs.WriteFileFromString(conf.MasterKeyPath, keyB64)
 	if err != nil {
 		slog.Error("Error while trying to write master key to file", "error", err)
 		return err
@@ -102,11 +105,4 @@ func SetMasterKey(plainTextValue string) error {
 
 	slog.Debug("Master key set successfully")
 	return nil
-}
-
-func masterKeyPath() string {
-	config := config.GetConfig()
-	path := filepath.Join(config.SecretsDirPath, "master-key")
-	slog.Debug("Computed master key path", "path", path)
-	return path
 }

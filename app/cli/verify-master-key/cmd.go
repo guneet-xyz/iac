@@ -2,7 +2,7 @@ package verifymasterkey
 
 import (
 	"fmt"
-	"iac/utils/secret"
+	"iac/utils/env/secret"
 	"log/slog"
 	"syscall"
 

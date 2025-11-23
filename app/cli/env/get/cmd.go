@@ -2,7 +2,7 @@ package get
 
 import (
 	"fmt"
-	"iac/utils/secret"
+	"iac/utils/env"
 	"log/slog"
 
 	"github.com/spf13/cobra"
@@ -14,14 +14,14 @@ var (
 
 var Cmd = &cobra.Command{
 	Use:   "get",
-	Short: "get a secret",
+	Short: "get an environment entry",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		value, err := secret.GetSecret(name)
+		envData, err := env.GetEnv(name)
 		if err != nil {
-			slog.Error("Failed to get secret", "error", err, "name", name)
+			slog.Error("Failed to get environment entry", "error", err, "name", name)
 			return err
 		}
-		fmt.Println(value)
+		fmt.Println(envData.Value)
 		return nil
 	},
 }

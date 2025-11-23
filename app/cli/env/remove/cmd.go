@@ -1,7 +1,7 @@
 package remove
 
 import (
-	"iac/utils/secret"
+	"iac/utils/env"
 	"log/slog"
 
 	"github.com/spf13/cobra"
@@ -13,15 +13,15 @@ var (
 
 var Cmd = &cobra.Command{
 	Use:     "remove",
-	Short:   "remove a secret",
+	Short:   "remove an env entry",
 	Aliases: []string{"delete", "rm"},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		err := secret.DeleteSecret(name)
+		err := env.DeleteEnv(name)
 		if err != nil {
-			slog.Error("Failed to remove secret", "error", err, "name", name)
+			slog.Error("Failed to remove env entry", "error", err, "name", name)
 			return err
 		}
-		slog.Info("Secret removed", "name", name)
+		slog.Info("Env entry removed", "name", name)
 		return nil
 	},
 }

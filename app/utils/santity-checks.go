@@ -3,7 +3,7 @@ package utils
 import (
 	"iac/config"
 	"iac/utils/docker"
-	"iac/utils/secret"
+	"iac/utils/env/secret"
 	"os"
 )
 

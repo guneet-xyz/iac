@@ -92,7 +92,7 @@ func decryptAES256GCM(ciphertext []byte, key []byte, iv []byte) ([]byte, error) 
 	return plaintextBytes, nil
 }
 
-func encryptAES256GCMB64(plaintext string, keyBase64 string, ivBase64 string) (string, error) {
+func EncryptAES256GCMB64(plaintext string, keyBase64 string, ivBase64 string) (string, error) {
 	keyBytes, err := base64.StdEncoding.DecodeString(keyBase64)
 	if err != nil {
 		return "", errors.New("failed to decode base64 key", "error", err)
@@ -114,7 +114,7 @@ func encryptAES256GCMB64(plaintext string, keyBase64 string, ivBase64 string) (s
 	return cipherBase64, nil
 }
 
-func decryptAES256GCMB64(ciphertextBase64 string, keyBase64 string, ivBase64 string) (string, error) {
+func DecryptAES256GCMB64(ciphertextBase64 string, keyBase64 string, ivBase64 string) (string, error) {
 	keyBytes, err := base64.StdEncoding.DecodeString(keyBase64)
 	if err != nil {
 		return "", errors.New("failed to decode base64 key", "error", err)

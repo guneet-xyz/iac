@@ -1,16 +1,11 @@
 package add
 
 import (
-	"iac/utils/secret"
+	"iac/utils/env"
 	"log/slog"
 
 	"github.com/spf13/cobra"
 )
-
-type EnvType string
-
-var EnvTypeSecret EnvType = "secret"
-var EnvTypeVariable EnvType = "variable"
 
 var (
 	envType string
@@ -48,18 +43,25 @@ var Cmd = &cobra.Command{
 			return nil
 		}
 
-		switch EnvType(envType) {
-		case EnvTypeSecret:
-			slog.Info("adding new secret", "name", name)
-			return secret.SetSecret(name, value)
-		case EnvTypeVariable:
-			slog.Info("adding new variable", "name", name)
-			slog.Error("not implemented")
-			return nil
-		default:
-			slog.Error("unknown environment type", "type", envType)
+		if envType != string(env.EnvTypeSecret) && envType != string(env.EnvTypeVariable) {
+			slog.Error("type option must be either 'secret' or 'variable'")
 			return nil
 		}
+
+		envData := env.Env{
+			Type:  env.EnvType(envType),
+			Name:  name,
+			Value: value,
+		}
+
+		err := env.SetEnv(envData)
+		if err != nil {
+			slog.Error("failed to set environment entry", "error", err, "name", name)
+			return err
+		}
+
+		slog.Info("environment entry added successfully", "name", name)
+		return nil
 	},
 }
 

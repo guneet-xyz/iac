@@ -2,7 +2,7 @@ package setup
 
 import (
 	"fmt"
-	"iac/utils/secret"
+	"iac/utils/env/secret"
 	"log/slog"
 	"syscall"
 

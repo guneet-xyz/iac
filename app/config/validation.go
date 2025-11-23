@@ -18,13 +18,23 @@ func validateConfig(c *Config) error {
 		return err
 	}
 
-	c.SecretsDirPath, err = fs.MkdirIfNotExists(c.SecretsDirPath)
+	c.EnvDirPath, err = fs.MkdirIfNotExists(c.EnvDirPath)
 	if err != nil {
 		return err
 	}
 
-	if c.ServicesDirPath == c.BackupsDirPath || c.ServicesDirPath == c.SecretsDirPath || c.BackupsDirPath == c.SecretsDirPath {
-		return errors.New("ServicesDirPath, BackupsDirPath and SecretsDirPath must be different paths")
+	if c.ServicesDirPath == c.BackupsDirPath || c.ServicesDirPath == c.EnvDirPath || c.BackupsDirPath == c.EnvDirPath {
+		return errors.New("ServicesDirPath, BackupsDirPath and EnvDirPath must be different paths")
+	}
+
+	c.KcvPath, err = fs.AbsPath(c.KcvPath)
+	if err != nil {
+		return err
+	}
+
+	c.MasterKeyPath, err = fs.AbsPath(c.MasterKeyPath)
+	if err != nil {
+		return err
 	}
 
 	return nil
