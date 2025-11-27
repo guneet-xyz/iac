@@ -8,7 +8,7 @@ import (
 func validateConfig(c *Config) error {
 	var err error
 
-	c.ServicesDirPath, err = fs.MkdirIfNotExists(c.ServicesDirPath)
+	c.StacksDirPath, err = fs.MkdirIfNotExists(c.StacksDirPath)
 	if err != nil {
 		return err
 	}
@@ -23,8 +23,8 @@ func validateConfig(c *Config) error {
 		return err
 	}
 
-	if c.ServicesDirPath == c.BackupsDirPath || c.ServicesDirPath == c.EnvDirPath || c.BackupsDirPath == c.EnvDirPath {
-		return errors.New("ServicesDirPath, BackupsDirPath and EnvDirPath must be different paths")
+	if c.StacksDirPath == c.BackupsDirPath || c.StacksDirPath == c.EnvDirPath || c.BackupsDirPath == c.EnvDirPath {
+		return errors.New("StacksDirPath, BackupsDirPath and EnvDirPath must be different paths")
 	}
 
 	c.KcvPath, err = fs.AbsPath(c.KcvPath)

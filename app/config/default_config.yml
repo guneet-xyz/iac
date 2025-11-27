@@ -1,4 +1,4 @@
-servicesDirPath: "~/.local/share/iac/services"
+stacksDirPath: "~/.local/share/iac/stacks"
 backupsDirPath: "~/.local/share/iac/backups"
 envDirPath: "~/.local/share/iac/env"
 kcvPath: "~/.local/share/iac/kcv.json"

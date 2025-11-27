@@ -1,10 +1,10 @@
 package up
 
 import (
-	"iac/cli/info/services"
+	"iac/cli/stack/info"
 	"iac/utils/docker/compose"
 	"iac/utils/out"
-	"iac/utils/service"
+	"iac/utils/stack"
 	"log/slog"
 	"path/filepath"
 	"sync"
@@ -14,15 +14,15 @@ import (
 )
 
 var (
-	serviceName string
+	stackName string
 )
 
 var Cmd = &cobra.Command{
 	Use:   "up",
-	Short: "bring up services",
+	Short: "bring up stacks",
 	RunE: func(_ *cobra.Command, _ []string) error {
-		if serviceName == "" {
-			slog.Error("Service name is required")
+		if stackName == "" {
+			slog.Error("stack name is required")
 			return nil
 		}
 
@@ -39,7 +39,7 @@ var Cmd = &cobra.Command{
 			}
 		})
 
-		composePath, err := service.GetComposePathFromServiceName(serviceName)
+		composePath, err := stack.GetComposePathFromStackName(stackName)
 		if err != nil {
 			return err
 		}
@@ -52,11 +52,11 @@ var Cmd = &cobra.Command{
 		runSpinner = false
 		wg.Wait()
 
-		err = services.ShowInfoAboutService(serviceName)
+		err = info.ShowInfoAboutStack(stackName)
 		return err
 	},
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&serviceName, "service", "s", "", "Name of the service to bring up")
+	Cmd.Flags().StringVarP(&stackName, "stack", "s", "", "Name of the stack to bring up")
 }

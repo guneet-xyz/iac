@@ -3,10 +3,9 @@ package cli
 import (
 	"iac/cli/config"
 	"iac/cli/env"
-	"iac/cli/info"
 	"iac/cli/setup"
+	"iac/cli/stack"
 	"iac/cli/status"
-	"iac/cli/up"
 	verifymasterkey "iac/cli/verify-master-key"
 	"iac/cli/version"
 	"iac/utils"
@@ -49,11 +48,10 @@ var Cmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(config.Cmd)
-	Cmd.AddCommand(info.Cmd)
 	Cmd.AddCommand(env.Cmd)
 	Cmd.AddCommand(setup.Cmd)
+	Cmd.AddCommand(stack.Cmd)
 	Cmd.AddCommand(status.Cmd)
-	Cmd.AddCommand(up.Cmd)
 	Cmd.AddCommand(verifymasterkey.Cmd)
 	Cmd.AddCommand(version.Cmd)
 	Cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
