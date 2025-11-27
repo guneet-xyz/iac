@@ -1,4 +1,4 @@
-package service
+package stack
 
 import (
 	"iac/utils/docker"
@@ -8,17 +8,17 @@ import (
 	"time"
 )
 
-type ServiceInfoContainerRunningInfo struct {
+type StackInfoContainerRunningInfo struct {
 	ContainerId   string
 	ContainerName string
 }
 
-type ServiceInfoContainerConfigInfo struct {
+type StackInfoContainerConfigInfo struct {
 	ContainerName string
 	Name          string
 }
 
-type ServiceInfoContainerInspectInfo struct {
+type StackInfoContainerInspectInfo struct {
 	RestartCount int
 	Running      bool
 	StartedAt    time.Time
@@ -32,18 +32,18 @@ const (
 	FetchingStatusNotFound FetchingStatus = "not_found"
 )
 
-type ServiceInfoContainer struct {
+type StackInfoContainer struct {
 	ConfigInfoFound   bool
-	ConfigInfo        ServiceInfoContainerConfigInfo
+	ConfigInfo        StackInfoContainerConfigInfo
 	RunningInfoStatus FetchingStatus
-	RunningInfo       ServiceInfoContainerRunningInfo
+	RunningInfo       StackInfoContainerRunningInfo
 	InspectInfoStatus FetchingStatus
-	InspectInfo       ServiceInfoContainerInspectInfo
+	InspectInfo       StackInfoContainerInspectInfo
 }
 
-type ServiceInfo struct {
+type StackInfo struct {
 	Name       string
-	Containers []ServiceInfoContainer
+	Containers []StackInfoContainer
 }
 
 type InspectResultChannelStruct struct {
@@ -51,36 +51,36 @@ type InspectResultChannelStruct struct {
 	InspectResult  docker.InspectResult
 }
 
-func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) error {
-	slog.Debug("Getting service info", "service", svcName)
-	configPath, err := GetComposePathFromServiceName(svcName)
+func SendStackInfoToChannel(stackName string, stackInfoChannel chan StackInfo) error {
+	slog.Debug("Getting stack info", "stackName", stackName)
+	configPath, err := GetComposePathFromStackName(stackName)
 	if err != nil {
 		return err
 	}
 
-	info := ServiceInfo{
-		Name:       svcName,
-		Containers: []ServiceInfoContainer{},
+	info := StackInfo{
+		Name:       stackName,
+		Containers: []StackInfoContainer{},
 	}
 
 	config, err := compose.ReadConfig(configPath)
 
 	for containerSvcName, containerSvc := range config.Services {
-		container := ServiceInfoContainer{
+		container := StackInfoContainer{
 			ConfigInfoFound: true,
-			ConfigInfo: ServiceInfoContainerConfigInfo{
+			ConfigInfo: StackInfoContainerConfigInfo{
 				ContainerName: containerSvc.ContainerName,
 				Name:          containerSvcName,
 			},
 			RunningInfoStatus: FetchingStatusFetching,
-			RunningInfo:       ServiceInfoContainerRunningInfo{},
+			RunningInfo:       StackInfoContainerRunningInfo{},
 			InspectInfoStatus: FetchingStatusFetching,
-			InspectInfo:       ServiceInfoContainerInspectInfo{},
+			InspectInfo:       StackInfoContainerInspectInfo{},
 		}
 		info.Containers = append(info.Containers, container)
 	}
 
-	svcInfoChannel <- info
+	stackInfoChannel <- info
 
 	stats, err := compose.GetStats(configPath)
 	if err != nil {
@@ -92,7 +92,7 @@ func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) e
 		for i, infoContainer := range info.Containers {
 			if statsContainer.Name == infoContainer.ConfigInfo.ContainerName {
 				info.Containers[i].RunningInfoStatus = FetchingStatusFound
-				info.Containers[i].RunningInfo = ServiceInfoContainerRunningInfo{
+				info.Containers[i].RunningInfo = StackInfoContainerRunningInfo{
 					ContainerId:   statsContainer.Id,
 					ContainerName: statsContainer.Name,
 				}
@@ -101,21 +101,21 @@ func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) e
 			}
 		}
 		if !found {
-			container := ServiceInfoContainer{
+			container := StackInfoContainer{
 				ConfigInfoFound:   false,
-				ConfigInfo:        ServiceInfoContainerConfigInfo{},
+				ConfigInfo:        StackInfoContainerConfigInfo{},
 				RunningInfoStatus: FetchingStatusNotFound,
-				RunningInfo: ServiceInfoContainerRunningInfo{
+				RunningInfo: StackInfoContainerRunningInfo{
 					ContainerId:   statsContainer.Id,
 					ContainerName: statsContainer.Name,
 				},
 				InspectInfoStatus: FetchingStatusFetching,
-				InspectInfo:       ServiceInfoContainerInspectInfo{},
+				InspectInfo:       StackInfoContainerInspectInfo{},
 			}
 			info.Containers = append(info.Containers, container)
 		}
 	}
-	svcInfoChannel <- info
+	stackInfoChannel <- info
 
 	var wg sync.WaitGroup
 	inspectResultChannel := make(chan InspectResultChannelStruct)
@@ -147,14 +147,14 @@ func SendServiceInfoToChannel(svcName string, svcInfoChannel chan ServiceInfo) e
 	}()
 
 	for payload := range inspectResultChannel {
-		inspectInfo := ServiceInfoContainerInspectInfo{
+		inspectInfo := StackInfoContainerInspectInfo{
 			RestartCount: payload.InspectResult.RestartCount,
 			Running:      payload.InspectResult.State.Running,
 			StartedAt:    payload.InspectResult.State.StartedAt,
 		}
 		info.Containers[payload.ContainerIndex].InspectInfoStatus = FetchingStatusFound
 		info.Containers[payload.ContainerIndex].InspectInfo = inspectInfo
-		svcInfoChannel <- info
+		stackInfoChannel <- info
 	}
 
 	return nil

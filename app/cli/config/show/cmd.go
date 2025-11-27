@@ -38,7 +38,7 @@ var Cmd = &cobra.Command{
 			fmt.Printf("Configuration file is at %s\n", configFile)
 
 			fmt.Printf("Backups Directory: %s\n", config.BackupsDirPath)
-			fmt.Printf("Service Directory: %s\n", config.ServicesDirPath)
+			fmt.Printf("Stacks Directory: %s\n", config.StacksDirPath)
 		}
 
 		return nil

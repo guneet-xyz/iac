@@ -1,4 +1,4 @@
-package services
+package info
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"iac/utils/exitcodes"
 	"iac/utils/out"
 	"iac/utils/out/symbols"
-	"iac/utils/service"
+	"iac/utils/stack"
 	"log/slog"
 	"os"
 	"sync"
@@ -21,90 +21,90 @@ var (
 )
 
 var Cmd = &cobra.Command{
-	Use:   "services",
-	Short: "info about services",
-	RunE:  func(_ *cobra.Command, _ []string) error { return ShowInfoAboutService(name) },
+	Use:   "info",
+	Short: "info about the stack",
+	RunE:  func(_ *cobra.Command, _ []string) error { return ShowInfoAboutStack(name) },
 }
 
 func init() {
-	Cmd.Flags().StringVar(&name, "name", "", "Specify a service to get info about")
+	Cmd.Flags().StringVar(&name, "name", "", "Specify a stack to get info about")
 }
 
-func ShowInfoAboutService(name string) error {
+func ShowInfoAboutStack(name string) error {
 	wg := sync.WaitGroup{}
 	mutex := sync.Mutex{}
-	svcInfoWgFinished := false
-	svcInfos := []service.ServiceInfo{}
-	svcInfoChannel := make(chan service.ServiceInfo)
+	stackInfoWgFinished := false
+	stackInfos := []stack.StackInfo{}
+	stackInfoChannel := make(chan stack.StackInfo)
 
 	wg.Go(func() {
 
-		services, err := service.GetServiceNames()
+		stacks, err := stack.GetStackNames()
 		if err != nil {
 			return
 		}
 
-		var filteredServices []string
+		var filteredStacks []string
 
 		if name != "" {
-			for _, svc := range services {
-				if svc == name {
-					filteredServices = append(filteredServices, svc)
+			for _, stack := range stacks {
+				if stack == name {
+					filteredStacks = append(filteredStacks, stack)
 					break
 				}
 			}
-			if len(filteredServices) == 0 {
-				slog.Info("Service not found", "name", name)
-				os.Exit(exitcodes.ServiceNotFound)
+			if len(filteredStacks) == 0 {
+				slog.Info("Stack not found", "name", name)
+				os.Exit(exitcodes.StackNotFound)
 				return
 			}
 		} else {
-			filteredServices = services
-			if len(filteredServices) == 0 {
-				slog.Info("No services found")
-				os.Exit(exitcodes.NoServicesFound)
+			filteredStacks = stacks
+			if len(filteredStacks) == 0 {
+				slog.Info("No stacks found")
+				os.Exit(exitcodes.NoStacksFound)
 				return
 			}
 		}
 
-		svcInfoWg := sync.WaitGroup{}
+		stackInfoWg := sync.WaitGroup{}
 
-		for _, svcName := range filteredServices {
-			svcInfoWg.Go(func() { service.SendServiceInfoToChannel(svcName, svcInfoChannel) })
+		for _, stackName := range filteredStacks {
+			stackInfoWg.Go(func() { stack.SendStackInfoToChannel(stackName, stackInfoChannel) })
 		}
 
-		svcInfoWg.Wait()
-		svcInfoWgFinished = true
-		close(svcInfoChannel)
+		stackInfoWg.Wait()
+		stackInfoWgFinished = true
+		close(stackInfoChannel)
 
 	})
 
 	wg.Go(func() {
-		for svcInfo := range svcInfoChannel {
+		for stackInfo := range stackInfoChannel {
 			found := false
-			for i, existingSvcInfo := range svcInfos {
-				if existingSvcInfo.Name == svcInfo.Name {
-					svcInfos[i] = svcInfo
+			for i, existingStackInfo := range stackInfos {
+				if existingStackInfo.Name == stackInfo.Name {
+					stackInfos[i] = stackInfo
 					found = true
 					break
 				}
 			}
 			if !found {
-				svcInfos = append(svcInfos, svcInfo)
+				stackInfos = append(stackInfos, stackInfo)
 			}
 			mutex.Lock()
-			printServiceInfo(svcInfos)
+			printStackInfo(stackInfos)
 			mutex.Unlock()
 		}
 	})
 
 	wg.Go(func() {
 		for {
-			if svcInfoWgFinished {
+			if stackInfoWgFinished {
 				return
 			}
 			mutex.Lock()
-			printServiceInfo(svcInfos)
+			printStackInfo(stackInfos)
 			mutex.Unlock()
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -115,19 +115,19 @@ func ShowInfoAboutService(name string) error {
 	return nil
 }
 
-func printServiceInfo(svcInfos []service.ServiceInfo) {
+func printStackInfo(stackInfos []stack.StackInfo) {
 	lines := []string{}
-	if len(svcInfos) == 0 {
+	if len(stackInfos) == 0 {
 		lines = append(lines, out.SpinnerChar())
 	}
 
-	for _, info := range svcInfos {
+	for _, info := range stackInfos {
 		lines = append(lines, fmt.Sprintf("%s", info.Name))
 		for _, container := range info.Containers {
 			var name string
 			if container.ConfigInfoFound {
 				name = container.ConfigInfo.Name
-			} else if container.RunningInfoStatus == service.FetchingStatusFound {
+			} else if container.RunningInfoStatus == stack.FetchingStatusFound {
 				name = container.RunningInfo.ContainerName
 			} else {
 				err := errors.New("This should never happen. Container config info not found, but running info also not found")
@@ -136,11 +136,11 @@ func printServiceInfo(svcInfos []service.ServiceInfo) {
 
 			var symbol string
 			switch container.RunningInfoStatus {
-			case service.FetchingStatusFetching:
+			case stack.FetchingStatusFetching:
 				symbol = out.SpinnerChar()
-			case service.FetchingStatusNotFound:
+			case stack.FetchingStatusNotFound:
 				symbol = symbols.X
-			case service.FetchingStatusFound:
+			case stack.FetchingStatusFound:
 				switch container.ConfigInfoFound {
 				case false:
 					symbol = symbols.Question
@@ -151,12 +151,12 @@ func printServiceInfo(svcInfos []service.ServiceInfo) {
 
 			var extraInfo string
 			switch container.InspectInfoStatus {
-			case service.FetchingStatusFetching:
+			case stack.FetchingStatusFetching:
 				extraInfo = out.SpinnerChar()
-			case service.FetchingStatusNotFound:
+			case stack.FetchingStatusNotFound:
 				symbol = symbols.X
 				extraInfo = ""
-			case service.FetchingStatusFound:
+			case stack.FetchingStatusFound:
 				if !container.InspectInfo.Running {
 					symbol = symbols.X
 					break

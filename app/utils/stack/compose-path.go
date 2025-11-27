@@ -1,4 +1,4 @@
-package service
+package stack
 
 import (
 	"iac/config"
@@ -15,24 +15,24 @@ var possibleComposeFilenames = []string{
 	"compose.yaml",
 }
 
-func GetServiceDirFromServiceName(svcName string) string {
-	return filepath.Join(config.GetConfig().ServicesDirPath, svcName)
+func GetStackDirFromStackName(stackName string) string {
+	return filepath.Join(config.GetConfig().StacksDirPath, stackName)
 }
 
-func GetComposePathFromServiceName(svcName string) (string, error) {
-	slog.Debug("Searching for compose file", "service", svcName)
-	svcDir := GetServiceDirFromServiceName(svcName)
+func GetComposePathFromStackName(stackName string) (string, error) {
+	slog.Debug("Searching for compose file", "stackName", stackName)
+	stackDir := GetStackDirFromStackName(stackName)
 
 	for _, fname := range possibleComposeFilenames {
 		stat, err :=
-			fs.Stat(filepath.Join(svcDir, fname))
+			fs.Stat(filepath.Join(stackDir, fname))
 		if err != nil {
 			return "", err
 		}
 		if stat != fs.StatResultFile {
 			continue
 		}
-		absPath, err := filepath.Abs(filepath.Join(svcDir, fname))
+		absPath, err := filepath.Abs(filepath.Join(stackDir, fname))
 		if err != nil {
 			return "", err
 		}
@@ -48,6 +48,6 @@ func GetComposePathFromServiceName(svcName string) (string, error) {
 		return absPath, nil
 	}
 
-	slog.Debug("No valid compose file found", "service", svcName)
+	slog.Debug("No valid compose file found", "stackName", stackName)
 	return "", nil
 }
