@@ -1,5 +1,16 @@
-stacksDirPath: "~/.local/share/iac/stacks"
-backupsDirPath: "~/.local/share/iac/backups"
-envDirPath: "~/.local/share/iac/env"
-kcvPath: "~/.local/share/iac/kcv.json"
-masterKeyPath: "~/.local/share/iac/master_key"
+[repository]
+directory_path = "/mnt/iac"
+origin_url = "https://github.com/guneet-xyz/iac-config"
+
+[master_key]
+kcv_path = "~/.config/iac/kcv.json"
+master_key_path = "~/.config/iac/master_key"
+
+[environment]
+directory_path = "~/.config/iac/environment"
+
+[stacks]
+directory_path = "~/.config/iac/stacks"
+
+[backups]
+directory_path = "~/.config/iac/backups"

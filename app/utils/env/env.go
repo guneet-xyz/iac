@@ -10,7 +10,7 @@ import (
 
 func ListEnvEntries() ([]string, error) {
 	var conf = config.GetConfig()
-	var dirEntries, err = fs.ReadDir(conf.EnvDirPath)
+	var dirEntries, err = fs.ReadDir(conf.Environment.DirectoryPath)
 	if err != nil {
 		slog.Error("Failed to list env entries", "error", err)
 		return nil, err
@@ -107,7 +107,7 @@ func SetEnv(env Env) error {
 
 func DeleteEnv(name string) error {
 	var conf = config.GetConfig()
-	var filePath = filepath.Join(conf.EnvDirPath, name+".json")
+	var filePath = filepath.Join(conf.Environment.DirectoryPath, name+".json")
 	err := fs.DeleteFile(filePath)
 	if err != nil {
 		slog.Error("Failed to delete env entry", "error", err, "name", name)

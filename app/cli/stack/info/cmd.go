@@ -122,7 +122,7 @@ func printStackInfo(stackInfos []stack.StackInfo) {
 	}
 
 	for _, info := range stackInfos {
-		lines = append(lines, fmt.Sprintf("%s", info.Name))
+		lines = append(lines, info.Name)
 		for _, container := range info.Containers {
 			var name string
 			if container.ConfigInfoFound {

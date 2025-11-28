@@ -35,10 +35,20 @@ var Cmd = &cobra.Command{
 		} else {
 			slog.Debug("Standard Output is enabled")
 
-			fmt.Printf("Configuration file is at %s\n", configFile)
+			fmt.Printf("Configuration file: %s\n\n", configFile)
 
-			fmt.Printf("Backups Directory: %s\n", config.BackupsDirPath)
-			fmt.Printf("Stacks Directory: %s\n", config.StacksDirPath)
+			fmt.Println("Repository:")
+			fmt.Printf("  Directory: %s\n", config.Repository.DirectoryPath)
+			fmt.Printf("  Origin:    %s\n\n", config.Repository.OriginURL)
+
+			fmt.Println("Master Key:")
+			fmt.Printf("  Key Path: %s\n", config.MasterKey.MasterKeyPath)
+			fmt.Printf("  KCV Path: %s\n\n", config.MasterKey.KcvPath)
+
+			fmt.Println("Directories:")
+			fmt.Printf("  Environment: %s\n", config.Environment.DirectoryPath)
+			fmt.Printf("  Stacks:      %s\n", config.Stacks.DirectoryPath)
+			fmt.Printf("  Backups:     %s\n", config.Backups.DirectoryPath)
 		}
 
 		return nil

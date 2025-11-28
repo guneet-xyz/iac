@@ -64,6 +64,9 @@ func SendStackInfoToChannel(stackName string, stackInfoChannel chan StackInfo) e
 	}
 
 	config, err := compose.ReadConfig(configPath)
+	if err != nil {
+		return err
+	}
 
 	for containerSvcName, containerSvc := range config.Services {
 		container := StackInfoContainer{
