@@ -5,6 +5,7 @@ import (
 	"iac/utils/exitcodes"
 	"iac/utils/fs"
 	"log/slog"
+	"os"
 	"path/filepath"
 )
 
@@ -35,15 +36,10 @@ func setupConfigIfItDoesNotExist() error {
 	return nil
 }
 
-func SanityChecks() (int, error) {
-	slog.Debug("Performing config sanity checks")
-
+func init() {
 	err := setupConfigIfItDoesNotExist()
 	if err != nil {
 		slog.Error("Failed to setup config file", "error", err)
-		return exitcodes.FailedToSetupConfigFile, err
+		os.Exit(exitcodes.FailedToSetupConfigFile)
 	}
-
-	slog.Debug("Config sanity checks passed")
-	return 0, nil
 }
