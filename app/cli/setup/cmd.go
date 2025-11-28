@@ -14,7 +14,7 @@ var Cmd = &cobra.Command{
 	Use:   "setup",
 	Short: "first time setup",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println(`Edit config file at ~/.iac/config.yaml to set up your environment`)
+		fmt.Println(`Edit config file at ~/.config/iac/config.toml to set up your environment`)
 
 		exists, err := secret.DoesMasterKeyExist()
 		if err != nil {

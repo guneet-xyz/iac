@@ -14,7 +14,7 @@ type Kcv struct {
 
 func doesKcvExist() bool {
 	conf := config.GetConfig()
-	stat, err := fs.Stat(conf.KcvPath)
+	stat, err := fs.Stat(conf.MasterKey.KcvPath)
 	if err != nil {
 		return false
 	}
@@ -23,7 +23,7 @@ func doesKcvExist() bool {
 
 func getKcv() (Kcv, error) {
 	conf := config.GetConfig()
-	bytes, err := fs.ReadFileAsBytes(conf.KcvPath)
+	bytes, err := fs.ReadFileAsBytes(conf.MasterKey.KcvPath)
 	if err != nil {
 		return Kcv{}, err
 	}
@@ -41,7 +41,7 @@ func saveKcv(kcv Kcv) error {
 	if err != nil {
 		return err
 	}
-	return fs.WriteFileFromBytes(conf.KcvPath, bytes)
+	return fs.WriteFileFromBytes(conf.MasterKey.KcvPath, bytes)
 }
 
 var KcvPlainText = "Be My Baby - The Ronettes"

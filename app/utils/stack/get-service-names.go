@@ -14,12 +14,12 @@ func GetStackNames() ([]string, error) {
 
 	stacks := []string{}
 
-	err := filepath.WalkDir(conf.StacksDirPath, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(conf.Stacks.DirectoryPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if path == conf.StacksDirPath {
+		if path == conf.Stacks.DirectoryPath {
 			return nil
 		}
 

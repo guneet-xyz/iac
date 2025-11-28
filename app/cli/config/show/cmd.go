@@ -37,8 +37,13 @@ var Cmd = &cobra.Command{
 
 			fmt.Printf("Configuration file is at %s\n", configFile)
 
-			fmt.Printf("Backups Directory: %s\n", config.BackupsDirPath)
-			fmt.Printf("Stacks Directory: %s\n", config.StacksDirPath)
+			fmt.Printf("Repository Directory: %s\n", config.Repository.DirectoryPath)
+			fmt.Printf("Repository Origin: %s\n", config.Repository.OriginURL)
+			fmt.Printf("Environment Directory: %s\n", config.Environment.DirectoryPath)
+			fmt.Printf("Stacks Directory: %s\n", config.Stacks.DirectoryPath)
+			fmt.Printf("Backups Directory: %s\n", config.Backups.DirectoryPath)
+			fmt.Printf("Master Key Path: %s\n", config.MasterKey.MasterKeyPath)
+			fmt.Printf("KCV Path: %s\n", config.MasterKey.KcvPath)
 		}
 
 		return nil

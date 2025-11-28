@@ -8,31 +8,31 @@ import (
 func validateConfig(c *Config) error {
 	var err error
 
-	c.StacksDirPath, err = fs.MkdirIfNotExists(c.StacksDirPath)
+	c.Stacks.DirectoryPath, err = fs.MkdirIfNotExists(c.Stacks.DirectoryPath)
 	if err != nil {
 		return err
 	}
 
-	c.BackupsDirPath, err = fs.MkdirIfNotExists(c.BackupsDirPath)
+	c.Backups.DirectoryPath, err = fs.MkdirIfNotExists(c.Backups.DirectoryPath)
 	if err != nil {
 		return err
 	}
 
-	c.EnvDirPath, err = fs.MkdirIfNotExists(c.EnvDirPath)
+	c.Environment.DirectoryPath, err = fs.MkdirIfNotExists(c.Environment.DirectoryPath)
 	if err != nil {
 		return err
 	}
 
-	if c.StacksDirPath == c.BackupsDirPath || c.StacksDirPath == c.EnvDirPath || c.BackupsDirPath == c.EnvDirPath {
-		return errors.New("StacksDirPath, BackupsDirPath and EnvDirPath must be different paths")
+	if c.Stacks.DirectoryPath == c.Backups.DirectoryPath || c.Stacks.DirectoryPath == c.Environment.DirectoryPath || c.Backups.DirectoryPath == c.Environment.DirectoryPath {
+		return errors.New("Stacks, Backups and Environment directory paths must be different")
 	}
 
-	c.KcvPath, err = fs.AbsPath(c.KcvPath)
+	c.MasterKey.KcvPath, err = fs.AbsPath(c.MasterKey.KcvPath)
 	if err != nil {
 		return err
 	}
 
-	c.MasterKeyPath, err = fs.AbsPath(c.MasterKeyPath)
+	c.MasterKey.MasterKeyPath, err = fs.AbsPath(c.MasterKey.MasterKeyPath)
 	if err != nil {
 		return err
 	}
