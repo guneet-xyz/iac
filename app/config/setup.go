@@ -30,5 +30,5 @@ func setupConfigIfItDoesNotExist() error {
 		err = fs.WriteFileFromString(ConfigFilePath, DefaultConfig)
 	}
 
-	return nil
+	return err
 }
