@@ -7,7 +7,7 @@ import (
 
 var ConfigDirName = "~/.config/iac"
 var ConfigFileNameWithoutExtension = "config"
-var ConfigFileName = ConfigFileNameWithoutExtension + ".yml"
+var ConfigFileName = ConfigFileNameWithoutExtension + ".toml"
 var ConfigFilePath string
 
 func init() {
