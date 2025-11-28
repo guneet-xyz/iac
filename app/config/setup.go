@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-//go:embed default_config.yml
+//go:embed default_config.toml
 var DefaultConfig string
 
 func setupConfigIfItDoesNotExist() error {
