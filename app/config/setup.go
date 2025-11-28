@@ -2,10 +2,8 @@ package config
 
 import (
 	_ "embed"
-	"iac/utils/exitcodes"
 	"iac/utils/fs"
 	"log/slog"
-	"os"
 	"path/filepath"
 )
 
@@ -15,12 +13,11 @@ var DefaultConfig string
 func setupConfigIfItDoesNotExist() error {
 	var err error
 
-	ConfigDirName, err = fs.MkdirIfNotExists(ConfigDirName)
+	configDirName := filepath.Dir(ConfigFilePath)
+	_, err = fs.MkdirIfNotExists(configDirName)
 	if err != nil {
 		panic(err)
 	}
-
-	ConfigFilePath := filepath.Join(ConfigDirName, ConfigFileName)
 
 	stat, err := fs.Stat(ConfigFilePath)
 	if err != nil || stat == fs.StatResultStatError {
@@ -34,12 +31,4 @@ func setupConfigIfItDoesNotExist() error {
 	}
 
 	return nil
-}
-
-func init() {
-	err := setupConfigIfItDoesNotExist()
-	if err != nil {
-		slog.Error("Failed to setup config file", "error", err)
-		os.Exit(exitcodes.FailedToSetupConfigFile)
-	}
 }
