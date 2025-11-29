@@ -29,3 +29,18 @@ type Config struct {
 	Stacks      StacksConfig      `mapstructure:"stacks"`
 	Backups     BackupsConfig     `mapstructure:"backups"`
 }
+
+type UserConfig struct {
+	Repository RepositoryConfig `mapstructure:"repository"`
+}
+
+type RepoConfig struct {
+	Key         KeyConfig         `mapstructure:"key"`
+	Environment EnvironmentConfig `mapstructure:"environment"`
+	Stacks      StacksConfig      `mapstructure:"stacks"`
+	Backups     BackupsConfig     `mapstructure:"backups"`
+}
+
+type KeyConfig struct {
+	DirectoryPath string `mapstructure:"directory_path"`
+}

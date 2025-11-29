@@ -1,0 +1,11 @@
+[key]
+directory_path = "key"
+
+[environment]
+directory_path = "env"
+
+[stacks]
+directory_path = "stacks"
+
+[backups]
+directory_path = "backups"

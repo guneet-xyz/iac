@@ -20,13 +20,18 @@ var Cmd = &cobra.Command{
 	Use:   "show",
 	Short: "show configuration settings",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		config := config.GetConfig()
+		userConfig := config.GetUserConfig()
+		repoConfig := config.GetRepoConfig()
 		configFile := viper.GetViper().ConfigFileUsed()
 
 		if jsonOutput {
 			slog.Debug("Json Output is enabled")
 
-			jsonData, err := json.MarshalIndent(config, "", "  ")
+			output := map[string]interface{}{
+				"user":       userConfig,
+				"repository": repoConfig,
+			}
+			jsonData, err := json.MarshalIndent(output, "", "  ")
 			if err != nil {
 				return errors.New("Failed to generate JSON output", "error", err)
 			}
@@ -38,17 +43,15 @@ var Cmd = &cobra.Command{
 			fmt.Printf("Configuration file: %s\n\n", configFile)
 
 			fmt.Println("Repository:")
-			fmt.Printf("  Directory: %s\n", config.Repository.DirectoryPath)
-			fmt.Printf("  Origin:    %s\n\n", config.Repository.OriginURL)
+			fmt.Printf("  Directory: %s\n\n", userConfig.Repository.DirectoryPath)
 
-			fmt.Println("Master Key:")
-			fmt.Printf("  Key Path: %s\n", config.MasterKey.MasterKeyPath)
-			fmt.Printf("  KCV Path: %s\n\n", config.MasterKey.KcvPath)
+			fmt.Println("Key:")
+			fmt.Printf("  Directory: %s\n\n", repoConfig.Key.DirectoryPath)
 
 			fmt.Println("Directories:")
-			fmt.Printf("  Environment: %s\n", config.Environment.DirectoryPath)
-			fmt.Printf("  Stacks:      %s\n", config.Stacks.DirectoryPath)
-			fmt.Printf("  Backups:     %s\n", config.Backups.DirectoryPath)
+			fmt.Printf("  Environment: %s\n", repoConfig.Environment.DirectoryPath)
+			fmt.Printf("  Stacks:      %s\n", repoConfig.Stacks.DirectoryPath)
+			fmt.Printf("  Backups:     %s\n", repoConfig.Backups.DirectoryPath)
 		}
 
 		return nil

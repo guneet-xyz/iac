@@ -10,7 +10,7 @@ import (
 func GetStackNames() ([]string, error) {
 	slog.Debug("Getting stack names from stacks directory")
 
-	conf := config.GetConfig()
+	conf := config.GetRepoConfig()
 
 	stacks := []string{}
 

@@ -16,7 +16,7 @@ var possibleComposeFilenames = []string{
 }
 
 func GetStackDirFromStackName(stackName string) string {
-	return filepath.Join(config.GetConfig().Stacks.DirectoryPath, stackName)
+	return filepath.Join(config.GetRepoConfig().Stacks.DirectoryPath, stackName)
 }
 
 func GetComposePathFromStackName(stackName string) (string, error) {
