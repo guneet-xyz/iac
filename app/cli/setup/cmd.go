@@ -120,6 +120,11 @@ func setupRepository() error {
 		return nil
 	}
 
+	if statResult == fs.StatResultFile {
+		slog.Error("A file exists at the repository path (%s). Please remove or rename it and try again.", symbols.X, repoPath)
+		return fmt.Errorf("file exists at repository path: %s", repoPath)
+	}
+
 	slog.Info("Repository directory does not exist, prompting for setup choice")
 	fmt.Println("Would you like to:")
 	fmt.Println("  1) Clone an existing remote repository")
