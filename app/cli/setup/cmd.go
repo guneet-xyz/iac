@@ -196,16 +196,6 @@ func cloneRepository(repoPath string) error {
 func initializeRepository(repoPath string) error {
 	slog.Info("Starting repository initialization", "path", repoPath)
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Remote origin URL (optional, press Enter to skip): ")
-
-	urlInput, err := reader.ReadString('\n')
-	if err != nil {
-		return err
-	}
-	urlInput = strings.TrimSpace(urlInput)
-	_ = urlInput
-
 	runSpinner := true
 	var initErr error
 	var wg sync.WaitGroup
