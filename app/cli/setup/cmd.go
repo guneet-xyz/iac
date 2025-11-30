@@ -164,14 +164,12 @@ func cloneRepository(repoPath string) error {
 	var cloneErr error
 	var wg sync.WaitGroup
 
-	wg.Go(
-		func() {
-			defer wg.Done()
-			cloneErr = git.CloneRepository(urlInput, repoPath)
-		})
+	wg.Go(func() {
+		cloneErr = git.CloneRepository(urlInput, repoPath)
+		runSpinner = false
+	})
 
 	wg.Go(func() {
-		defer wg.Done()
 		for runSpinner {
 			lines := []string{
 				out.SpinnerChar() + " Cloning repository...",
@@ -182,7 +180,6 @@ func cloneRepository(repoPath string) error {
 	})
 
 	wg.Wait()
-	runSpinner = false
 
 	if cloneErr != nil {
 		fmt.Printf("%s Failed to clone repository\n", symbols.X)
@@ -201,12 +198,11 @@ func initializeRepository(repoPath string) error {
 	var wg sync.WaitGroup
 
 	wg.Go(func() {
-		defer wg.Done()
 		initErr = git.InitRepository(repoPath)
+		runSpinner = false
 	})
 
 	wg.Go(func() {
-		defer wg.Done()
 		for runSpinner {
 			lines := []string{
 				out.SpinnerChar() + " Initializing repository...",
@@ -217,7 +213,6 @@ func initializeRepository(repoPath string) error {
 	})
 
 	wg.Wait()
-	runSpinner = false
 
 	if initErr != nil {
 		fmt.Printf("%s Failed to initialize repository\n", symbols.X)
