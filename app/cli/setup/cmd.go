@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"iac/config"
 	"iac/utils/env/secret"
+	"iac/utils/errors"
 	"iac/utils/fs"
 	"iac/utils/git"
 	"iac/utils/out"
@@ -86,6 +87,10 @@ func setupRepository() error {
 		return err
 	}
 
+	if statResult == fs.StatResultFile {
+		return errors.New("Repository path is a file, expected directory", "path", repoPath)
+	}
+
 	if statResult == fs.StatResultDirectory {
 		isRepo, err := git.IsGitRepository(repoPath)
 		if err != nil {
@@ -119,7 +124,7 @@ func setupRepository() error {
 	fmt.Println("Would you like to:")
 	fmt.Println("  1) Clone an existing remote repository")
 	fmt.Println("  2) Initialize a new repository")
-	fmt.Print("\nEnter choice (1 or 2): ")
+	fmt.Print("Enter choice (1 or 2): ")
 
 	reader := bufio.NewReader(os.Stdin)
 	choice, err := reader.ReadString('\n')
