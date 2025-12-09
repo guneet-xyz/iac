@@ -115,7 +115,7 @@ func ShowInfoAboutStack(name string) error {
 	return nil
 }
 
-func printStackInfo(stackInfos []stack.StackInfo) {
+func printStackInfo(stackInfos []stack.StackInfo) error {
 	lines := []string{}
 	if len(stackInfos) == 0 {
 		lines = append(lines, out.SpinnerChar())
@@ -131,7 +131,7 @@ func printStackInfo(stackInfos []stack.StackInfo) {
 				name = container.RunningInfo.ContainerName
 			} else {
 				err := errors.New("This should never happen. Container config info not found, but running info also not found")
-				panic(err)
+				return err
 			}
 
 			var symbol string
@@ -203,4 +203,5 @@ func printStackInfo(stackInfos []stack.StackInfo) {
 	}
 
 	out.RepaintLines(lines)
+	return nil
 }

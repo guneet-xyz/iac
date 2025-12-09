@@ -8,10 +8,8 @@ import (
 	"iac/cli/status"
 	verifymasterkey "iac/cli/verify-master-key"
 	"iac/cli/version"
-	"iac/utils"
 	"iac/utils/logger"
 	"log/slog"
-	"slices"
 
 	"github.com/spf13/cobra"
 )
@@ -35,14 +33,6 @@ var Cmd = &cobra.Command{
 			Time:    showTime,
 		})
 		slog.Debug("Logger setup complete", "verbose", verbose)
-		cmdName := cmd.Name()
-		if !slices.Contains(exceptions, cmdName) {
-			err := utils.SanityChecks()
-			if err != nil {
-				slog.Error("Sanity checks failed", "error", err)
-				panic(err)
-			}
-		}
 	},
 }
 

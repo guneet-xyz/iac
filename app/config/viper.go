@@ -1,9 +1,11 @@
 package config
 
 import (
+	"log/slog"
 	"os"
 	"strings"
 
+	"iac/utils/exitcodes"
 	"iac/utils/fs"
 
 	"github.com/spf13/viper"
@@ -17,19 +19,22 @@ func init() {
 
 	if envConfigPath != "" {
 		if !strings.HasSuffix(strings.ToLower(envConfigPath), ".toml") {
-			panic("IAC_CONFIG must be a .toml file")
+			slog.Error("Environment variable IAC_CONFIG must point to a .toml file")
+			os.Exit(exitcodes.BadEnvironmentVariables)
 		}
 		ConfigFilePath = envConfigPath
 	}
 
 	ConfigFilePath, err = fs.AbsPath(ConfigFilePath)
 	if err != nil {
-		panic(err)
+		slog.Error("Failed to resolve config file path", "error", err)
+		os.Exit(exitcodes.CouldNotResolveConfigFilePath)
 	}
 
 	err = setupConfigIfItDoesNotExist()
 	if err != nil {
-		panic(err)
+		slog.Error("Failed to setup config file", "error", err)
+		os.Exit(exitcodes.CouldNotSetupConfigFile)
 	}
 
 	viper.SetConfigFile(ConfigFilePath)

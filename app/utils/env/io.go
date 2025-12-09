@@ -32,12 +32,22 @@ type StoredEnvVariable struct {
 	Value string `json:"value"`
 }
 
-func storedEnvFilePath(name string) string {
-	return filepath.Join(config.GetConfig().Environment.DirectoryPath, name+".json")
+func storedEnvFilePath(name string) (string, error) {
+	cfg, err := config.GetConfig()
+	if err != nil {
+		slog.Error("Failed to get config", "error", err)
+		return "", err
+	}
+	return filepath.Join(cfg.Environment.DirectoryPath, name+".json"), nil
 }
 
 func readStoredEnvType(name string) (EnvType, error) {
-	var bytes, err = fs.ReadFileAsBytes(storedEnvFilePath(name))
+	envFilePath, err := storedEnvFilePath(name)
+	if err != nil {
+		slog.Error("Failed to get stored env file path", "error", err, "name", name)
+		return "", err
+	}
+	bytes, err := fs.ReadFileAsBytes(envFilePath)
 	if err != nil {
 		slog.Error("Failed to read stored env file", "error", err, "name", name)
 		return "", err
@@ -59,7 +69,12 @@ func readStoredEnvType(name string) (EnvType, error) {
 }
 
 func readStoredEnvSecret(name string) (StoredEnvSecret, error) {
-	var bytes, err = fs.ReadFileAsBytes(storedEnvFilePath(name))
+	envFilePath, err := storedEnvFilePath(name)
+	if err != nil {
+		slog.Error("Failed to get stored env file path", "error", err, "name", name)
+		return StoredEnvSecret{}, err
+	}
+	bytes, err := fs.ReadFileAsBytes(envFilePath)
 	if err != nil {
 		slog.Error("Failed to read stored env secret file", "error", err, "name", name)
 		return StoredEnvSecret{}, err
@@ -76,7 +91,13 @@ func readStoredEnvSecret(name string) (StoredEnvSecret, error) {
 }
 
 func readStoredEnvVariable(name string) (StoredEnvVariable, error) {
-	var bytes, err = fs.ReadFileAsBytes(storedEnvFilePath(name))
+	envFilePath, err := storedEnvFilePath(name)
+	if err != nil {
+		slog.Error("Failed to get stored env file path", "error", err, "name", name)
+		return StoredEnvVariable{}, err
+	}
+
+	bytes, err := fs.ReadFileAsBytes(envFilePath)
 	if err != nil {
 		slog.Error("Failed to read stored env variable file", "error", err, "name", name)
 		return StoredEnvVariable{}, err
@@ -105,7 +126,13 @@ func writeStoredEnv(name string, envType EnvType, storedEnv any) error {
 		return err
 	}
 
-	err = fs.WriteFileFromBytes(storedEnvFilePath(name), bytes)
+	envFilePath, err := storedEnvFilePath(name)
+	if err != nil {
+		slog.Error("Failed to get stored env file path", "error", err, "name", name)
+		return err
+	}
+
+	err = fs.WriteFileFromBytes(envFilePath, bytes)
 	if err != nil {
 		slog.Error("Failed to write stored env file", "error", err, "name", name)
 		return err

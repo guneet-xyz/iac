@@ -16,7 +16,8 @@ func setupConfigIfItDoesNotExist() error {
 	configDirName := filepath.Dir(ConfigFilePath)
 	_, err = fs.MkdirIfNotExists(configDirName)
 	if err != nil {
-		panic(err)
+		slog.Error("Failed to create config directory", "path", configDirName, "error", err)
+		return err
 	}
 
 	stat, err := fs.Stat(ConfigFilePath)

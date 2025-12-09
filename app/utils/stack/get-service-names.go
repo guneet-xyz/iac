@@ -10,11 +10,15 @@ import (
 func GetStackNames() ([]string, error) {
 	slog.Debug("Getting stack names from stacks directory")
 
-	conf := config.GetConfig()
+	conf, err := config.GetConfig()
+	if err != nil {
+		slog.Error("Error retrieving config", "error", err)
+		return nil, err
+	}
 
 	stacks := []string{}
 
-	err := filepath.WalkDir(conf.Stacks.DirectoryPath, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(conf.Stacks.DirectoryPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
