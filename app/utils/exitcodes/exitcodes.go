@@ -11,4 +11,7 @@ const (
 	MasterKeyStatError            = 7
 	MasterKeyNotFound             = 8
 	FailedToSetupConfigFile       = 9
+	BadEnvironmentVariables       = 10
+	CouldNotResolveConfigFilePath = 11
+	CouldNotSetupConfigFile       = 12
 )

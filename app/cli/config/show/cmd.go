@@ -20,7 +20,10 @@ var Cmd = &cobra.Command{
 	Use:   "show",
 	Short: "show configuration settings",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		config := config.GetConfig()
+		config, err := config.GetConfig()
+		if err != nil {
+			return errors.New("Failed to retrieve configuration", "error", err)
+		}
 		configFile := viper.GetViper().ConfigFileUsed()
 
 		if jsonOutput {

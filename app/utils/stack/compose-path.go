@@ -15,13 +15,21 @@ var possibleComposeFilenames = []string{
 	"compose.yaml",
 }
 
-func GetStackDirFromStackName(stackName string) string {
-	return filepath.Join(config.GetConfig().Stacks.DirectoryPath, stackName)
+func GetStackDirFromStackName(stackName string) (string, error) {
+	cfg, err := config.GetConfig()
+	if err != nil {
+		slog.Error("Failed to get config", "error", err)
+		return "", err
+	}
+	return filepath.Join(cfg.Stacks.DirectoryPath, stackName), nil
 }
 
 func GetComposePathFromStackName(stackName string) (string, error) {
 	slog.Debug("Searching for compose file", "stackName", stackName)
-	stackDir := GetStackDirFromStackName(stackName)
+	stackDir, err := GetStackDirFromStackName(stackName)
+	if err != nil {
+		return "", err
+	}
 
 	for _, fname := range possibleComposeFilenames {
 		stat, err :=

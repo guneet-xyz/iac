@@ -9,7 +9,12 @@ import (
 
 func DoesMasterKeyExist() (bool, error) {
 	slog.Debug("Checking if master key exists")
-	conf := config.GetConfig()
+	conf, err := config.GetConfig()
+	if err != nil {
+		slog.Error("Error while trying to get config", "error", err)
+		return false, err
+	}
+
 	stat, err := fs.Stat(conf.MasterKey.MasterKeyPath)
 	if err != nil {
 		slog.Error("Error while trying to stat master key file", "error", err)
@@ -35,7 +40,11 @@ func DoesMasterKeyExist() (bool, error) {
 
 func GetMasterKeyB64() (string, error) {
 	slog.Debug("Retrieving master key")
-	conf := config.GetConfig()
+	conf, err := config.GetConfig()
+	if err != nil {
+		slog.Error("Error while trying to get config", "error", err)
+		return "", err
+	}
 	keyB64, err := fs.ReadFileAsString(conf.MasterKey.MasterKeyPath)
 	slog.Debug("Master key read from file", "length", len(keyB64))
 	if err != nil {
@@ -55,9 +64,13 @@ func GetMasterKeyB64() (string, error) {
 
 func SetMasterKey(plainTextValue string) error {
 	slog.Debug("Setting master key")
-	kcvExists := doesKcvExist()
-	var keyB64 string
 	var err error
+	kcvExists, err := doesKcvExist()
+	if err != nil {
+		slog.Error("Error while trying to check if KCV exists", "error", err)
+		return err
+	}
+	var keyB64 string
 	if kcvExists {
 		kcv, err := getKcv()
 		if err != nil {
@@ -96,7 +109,12 @@ func SetMasterKey(plainTextValue string) error {
 		slog.Info("KCV created.")
 	}
 
-	conf := config.GetConfig()
+	conf, err := config.GetConfig()
+	if err != nil {
+		slog.Error("Error while trying to get config", "error", err)
+		return err
+	}
+
 	err = fs.WriteFileFromString(conf.MasterKey.MasterKeyPath, keyB64)
 	if err != nil {
 		slog.Error("Error while trying to write master key to file", "error", err)

@@ -4,6 +4,7 @@ import (
 	"iac/config"
 	"iac/utils/fs"
 	"iac/utils/json"
+	"log/slog"
 )
 
 type Kcv struct {
@@ -12,35 +13,56 @@ type Kcv struct {
 	ValueBase64 string
 }
 
-func doesKcvExist() bool {
-	conf := config.GetConfig()
+func doesKcvExist() (bool, error) {
+	conf, err := config.GetConfig()
+	if err != nil {
+		slog.Error("Failed to get config", "error", err)
+		return false, err
+	}
+
 	stat, err := fs.Stat(conf.MasterKey.KcvPath)
 	if err != nil {
-		return false
+		return false, nil
 	}
-	return stat == fs.StatResultFile
+	return stat == fs.StatResultFile, nil
 }
 
 func getKcv() (Kcv, error) {
-	conf := config.GetConfig()
-	bytes, err := fs.ReadFileAsBytes(conf.MasterKey.KcvPath)
+	conf, err := config.GetConfig()
 	if err != nil {
+		slog.Error("Failed to get config", "error", err)
 		return Kcv{}, err
 	}
+
+	bytes, err := fs.ReadFileAsBytes(conf.MasterKey.KcvPath)
+	if err != nil {
+		slog.Error("Failed to read KCV file", "error", err)
+		return Kcv{}, err
+	}
+
 	var kcv Kcv
 	err = json.Unmarshal(bytes, &kcv)
 	if err != nil {
+		slog.Error("Failed to unmarshal KCV", "error", err)
 		return Kcv{}, err
 	}
+
 	return kcv, nil
 }
 
 func saveKcv(kcv Kcv) error {
-	conf := config.GetConfig()
-	bytes, err := json.Marshal(kcv)
+	conf, err := config.GetConfig()
 	if err != nil {
+		slog.Error("Failed to get config", "error", err)
 		return err
 	}
+
+	bytes, err := json.Marshal(kcv)
+	if err != nil {
+		slog.Error("Failed to marshal KCV", "error", err)
+		return err
+	}
+
 	return fs.WriteFileFromBytes(conf.MasterKey.KcvPath, bytes)
 }
 
@@ -49,6 +71,7 @@ var KcvPlainText = "Be My Baby - The Ronettes"
 func generateKcv(saltBase64 string, ivBase64 string, keyBase64 string) (Kcv, error) {
 	encryptedKcvValue, err := EncryptAES256GCMB64(KcvPlainText, keyBase64, ivBase64)
 	if err != nil {
+		slog.Error("Failed to encrypt KCV value", "error", err)
 		return Kcv{}, err
 	}
 
@@ -63,10 +86,12 @@ func generateKcv(saltBase64 string, ivBase64 string, keyBase64 string) (Kcv, err
 func verifyKeyWithKcv(keyBase64 string) (bool, error) {
 	kcv, err := getKcv()
 	if err != nil {
+		slog.Error("Failed to get KCV", "error", err)
 		return false, err
 	}
 	decryptedKcvValue, err := DecryptAES256GCMB64(kcv.ValueBase64, keyBase64, kcv.IvBase64)
 	if err != nil {
+		slog.Error("Failed to decrypt KCV value", "error", err)
 		return false, err
 	}
 	return decryptedKcvValue == KcvPlainText, nil
@@ -75,10 +100,12 @@ func verifyKeyWithKcv(keyBase64 string) (bool, error) {
 func VerifyPassphraseWithKcv(passphrase string) (bool, error) {
 	kcv, err := getKcv()
 	if err != nil {
+		slog.Error("Failed to get KCV", "error", err)
 		return false, err
 	}
 	keyBase64, err := GenerateKeyB64(passphrase, kcv.SaltBase64)
 	if err != nil {
+		slog.Error("Failed to generate key from passphrase", "error", err)
 		return false, err
 	}
 	return verifyKeyWithKcv(keyBase64)

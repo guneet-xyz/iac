@@ -10,20 +10,26 @@ import (
 
 var cachedConfig Config
 
-func GetConfig() Config {
-	config := GetConfigUnvalidated()
+func GetConfig() (Config, error) {
+	config, err := GetConfigUnvalidated()
+	if err != nil {
+		slog.Error("Error getting config", "error", err)
+		return Config{}, err
+	}
 	slog.Debug("Config loaded:", "config", config)
 
-	err := validateConfig(&config)
+	err = validateConfig(&config)
 	if err != nil {
-		panic(err)
+		slog.Error("Config validation failed", "error", err)
+		return Config{}, err
 	}
-	return config
+
+	return config, nil
 }
 
-func GetConfigUnvalidated() Config {
+func GetConfigUnvalidated() (Config, error) {
 	if (cachedConfig != Config{}) {
-		return cachedConfig
+		return cachedConfig, nil
 	}
 
 	err := viper.ReadInConfig()
@@ -34,8 +40,9 @@ func GetConfigUnvalidated() Config {
 
 	err = viper.Unmarshal(&cachedConfig)
 	if err != nil {
-		panic(err)
+		slog.Error("Error unmarshaling config file", "error", err)
+		return Config{}, err
 	}
 
-	return cachedConfig
+	return cachedConfig, nil
 }
