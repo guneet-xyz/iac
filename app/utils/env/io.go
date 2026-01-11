@@ -33,7 +33,7 @@ type StoredEnvVariable struct {
 }
 
 func storedEnvFilePath(name string) string {
-	return filepath.Join(config.GetConfig().Environment.DirectoryPath, name+".json")
+	return filepath.Join(config.GetRepoConfig().Environment.DirectoryPath, name+".json")
 }
 
 func readStoredEnvType(name string) (EnvType, error) {

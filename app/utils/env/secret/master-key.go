@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"iac/config"
 	"iac/utils/errors"
 	"iac/utils/fs"
 	"log/slog"
@@ -9,8 +8,7 @@ import (
 
 func DoesMasterKeyExist() (bool, error) {
 	slog.Debug("Checking if master key exists")
-	conf := config.GetConfig()
-	stat, err := fs.Stat(conf.MasterKey.MasterKeyPath)
+	stat, err := fs.Stat(masterKeyPath())
 	if err != nil {
 		slog.Error("Error while trying to stat master key file", "error", err)
 		return false, err
@@ -35,8 +33,7 @@ func DoesMasterKeyExist() (bool, error) {
 
 func GetMasterKeyB64() (string, error) {
 	slog.Debug("Retrieving master key")
-	conf := config.GetConfig()
-	keyB64, err := fs.ReadFileAsString(conf.MasterKey.MasterKeyPath)
+	keyB64, err := fs.ReadFileAsString(masterKeyPath())
 	slog.Debug("Master key read from file", "length", len(keyB64))
 	if err != nil {
 		slog.Error("Error while trying to read master key from file", "error", err)
@@ -96,8 +93,7 @@ func SetMasterKey(plainTextValue string) error {
 		slog.Info("KCV created.")
 	}
 
-	conf := config.GetConfig()
-	err = fs.WriteFileFromString(conf.MasterKey.MasterKeyPath, keyB64)
+	err = fs.WriteFileFromString(masterKeyPath(), keyB64)
 	if err != nil {
 		slog.Error("Error while trying to write master key to file", "error", err)
 		return err

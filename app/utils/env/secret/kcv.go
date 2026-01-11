@@ -4,7 +4,21 @@ import (
 	"iac/config"
 	"iac/utils/fs"
 	"iac/utils/json"
+	"path/filepath"
 )
+
+const (
+	KcvFileName       = "kcv.json"
+	MasterKeyFileName = "master_key"
+)
+
+func kcvPath() string {
+	return filepath.Join(config.GetRepoConfig().Key.DirectoryPath, KcvFileName)
+}
+
+func masterKeyPath() string {
+	return filepath.Join(config.GetRepoConfig().Key.DirectoryPath, MasterKeyFileName)
+}
 
 type Kcv struct {
 	SaltBase64  string
@@ -13,8 +27,7 @@ type Kcv struct {
 }
 
 func doesKcvExist() bool {
-	conf := config.GetConfig()
-	stat, err := fs.Stat(conf.MasterKey.KcvPath)
+	stat, err := fs.Stat(kcvPath())
 	if err != nil {
 		return false
 	}
@@ -22,8 +35,7 @@ func doesKcvExist() bool {
 }
 
 func getKcv() (Kcv, error) {
-	conf := config.GetConfig()
-	bytes, err := fs.ReadFileAsBytes(conf.MasterKey.KcvPath)
+	bytes, err := fs.ReadFileAsBytes(kcvPath())
 	if err != nil {
 		return Kcv{}, err
 	}
@@ -36,12 +48,11 @@ func getKcv() (Kcv, error) {
 }
 
 func saveKcv(kcv Kcv) error {
-	conf := config.GetConfig()
 	bytes, err := json.Marshal(kcv)
 	if err != nil {
 		return err
 	}
-	return fs.WriteFileFromBytes(conf.MasterKey.KcvPath, bytes)
+	return fs.WriteFileFromBytes(kcvPath(), bytes)
 }
 
 var KcvPlainText = "Be My Baby - The Ronettes"
